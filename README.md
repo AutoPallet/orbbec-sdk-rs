@@ -1,9 +1,9 @@
 # Orbbec SDK for Rust [![Latest Version]][crates.io] [![docs]][docs.rs]
 
-[Latest Version]: https://img.shields.io/crates/v/orbbec-sdk-rs.svg
-[crates.io]: https://crates.io/crates/orbbec-sdk-rs
-[docs]: https://docs.rs/orbbec-sdk-rs/badge.svg
-[docs.rs]: https://docs.rs/orbbec-sdk-rs
+[Latest Version]: https://img.shields.io/crates/v/orbbec-sdk.svg
+[crates.io]: https://crates.io/crates/orbbec-sdk
+[docs]: https://docs.rs/orbbec-sdk/badge.svg
+[docs.rs]: https://docs.rs/orbbec-sdk
 
 Rust support for Orbbec 3D Cameras.  
 This project provides high-level bindings to [Orbbec SDK v2](https://github.com/orbbec/OrbbecSDK_v2).

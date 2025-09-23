@@ -1,13 +1,16 @@
 mod utils;
 use std::time::Duration;
 
+use kiss3d::window::Window;
+use nalgebra::Point3;
 use orbbec_sdk::{
-    Context, ConvertType, Format, PermissionType, SensorType,
+    Context, Format, PermissionType, SensorType,
     device::DeviceProperty,
-    filter::{AlignFilter, Filter, FormatConvertFilter},
+    filter::{AlignFilter, Filter, PointCloudFilter},
     pipeline::{Config, Pipeline},
 };
-use show_image::{ImageInfo, ImageView, WindowOptions, create_window, run_context};
+use std::sync::mpsc::channel;
+use std::thread;
 
 const DEPTH_WIDTH: u16 = 848;
 const DEPTH_HEIGHT: u16 = 480;
@@ -15,13 +18,37 @@ const COLOR_WIDTH: u16 = 1280;
 const COLOR_HEIGHT: u16 = 720;
 const FPS: u8 = 15;
 
-fn main() {
-    // Run the user task in the show-image context
-    run_context(user_task);
+const RGB_POINT_CLOUD: bool = true; // Set to false to disable color in point cloud
+
+/// Convert raw point cloud data to a vector of 3D points with color
+fn convert_pointcloud(data: &[u8], with_color: bool) -> Vec<(Point3<f32>, Point3<f32>)> {
+    let point_size = if with_color { 6 } else { 3 }; // Each point has 3 coordinates (x, y, z) and optionally 3 color channels (r, g, b).
+    let num_points = (data.len() / (point_size * 4)) as usize; // Each float is 4 bytes
+    let mut points = Vec::with_capacity(num_points);
+
+    for i in 0..num_points {
+        let base_index = i * point_size * 4;
+        let x = f32::from_le_bytes(data[base_index..base_index + 4].try_into().unwrap());
+        let y = f32::from_le_bytes(data[base_index + 4..base_index + 8].try_into().unwrap());
+        let z = f32::from_le_bytes(data[base_index + 8..base_index + 12].try_into().unwrap());
+
+        if with_color {
+            let r = f32::from_le_bytes(data[base_index + 12..base_index + 16].try_into().unwrap())
+                / 255.0;
+            let g = f32::from_le_bytes(data[base_index + 16..base_index + 20].try_into().unwrap())
+                / 255.0;
+            let b = f32::from_le_bytes(data[base_index + 20..base_index + 24].try_into().unwrap())
+                / 255.0;
+            points.push((Point3::new(x, y, z), Point3::new(r, g, b)));
+        } else {
+            points.push((Point3::new(x, y, z), Point3::new(0.5, 0.5, 0.5))); // Default color (gray)
+        }
+    }
+
+    points
 }
 
-/// User task to run in the show-image context
-fn user_task() {
+fn main() {
     // Create context and get device list
     let context = Context::new().unwrap();
     let devices = context.query_device_list().unwrap();
@@ -92,11 +119,9 @@ fn user_task() {
         .set_align_to_stream_profile(&color_profile)
         .unwrap();
 
-    // Create format conversion filter to convert MJPG to RGB
-    let mut convert_filter = FormatConvertFilter::new().unwrap();
-    convert_filter
-        .set_convert_type(ConvertType::MJPGToRGB)
-        .unwrap();
+    // Create point cloud filter
+    let mut pc_filter = PointCloudFilter::new().unwrap();
+    pc_filter.set_color(RGB_POINT_CLOUD).unwrap();
 
     // Enable sync mode
     pipeline.set_frame_sync(true).unwrap();
@@ -104,15 +129,26 @@ fn user_task() {
     // Start streaming
     pipeline.start(&config).unwrap();
 
-    // Create window to display color + depth image
-    let window_config = WindowOptions {
-        preserve_aspect_ratio: true,
-        default_controls: false,
-        ..Default::default()
-    };
-    let window =
-        create_window("Color + Depth", window_config.clone()).expect("Failed to create window");
+    let (tx, rx) = channel();
 
+    // Spawn a thread for rendering
+    thread::spawn(move || {
+        let mut window = Window::new("Point Cloud");
+        window.set_point_size(1.0);
+
+        // Rendering loop
+        while window.render() {
+            // Receive points from the main thread
+            let points = rx.recv().unwrap();
+
+            // Draw all points
+            for (point, color) in points {
+                window.draw_point(&point, &color);
+            }
+        }
+    });
+
+    // Main loop
     loop {
         // Get frameset
         let frameset = match pipeline
@@ -126,47 +162,28 @@ fn user_task() {
             }
         };
 
-        // Get color frame
-        let color_frame = frameset.get_color_frame().unwrap();
-        let color_frame = match color_frame {
-            Some(frame) => frame,
-            None => {
-                eprintln!("No color frame found.");
-                continue;
-            }
-        };
+        // Check if color frame is available
+        if let None = frameset.get_color_frame().unwrap() {
+            eprintln!("No color frame found.");
+            continue;
+        }
 
-        // Convert color frame from MJPG to RGB
-        let color_frame = convert_filter.process(&color_frame).unwrap();
-        let color_data = color_frame.raw_data();
+        // Check if depth frame is available
+        if let None = frameset.get_depth_frame().unwrap() {
+            eprintln!("No depth frame found.");
+            continue;
+        }
 
-        // Get depth frame
-        let depth_frame = frameset.get_depth_frame().unwrap();
-        let depth_frame = match depth_frame {
-            Some(frame) => frame,
-            None => {
-                eprintln!("No depth frame found.");
-                continue;
-            }
-        };
+        // Align depth to color
+        let aligned_frame = align_filter.process(&frameset).unwrap();
 
-        // Align depth frame to color frame
-        let depth_frame = align_filter.process(&depth_frame).unwrap();
+        // Generate point cloud
+        let pc_frame = pc_filter.process(&aligned_frame).unwrap();
 
-        // Get raw depth data
-        let depth_data = depth_frame.raw_data();
+        // Convert raw data to point cloud
+        let points = convert_pointcloud(pc_frame.raw_data(), pc_frame.has_color());
 
-        // Convert depth to color image
-        let depth_image = utils::depth2image(depth_data).unwrap();
-
-        // Add color and depth images together
-        let added_image = utils::add_images(&depth_image, color_data);
-
-        // Display the combined image
-        let image = ImageView::new(
-            ImageInfo::rgb8(depth_frame.width() as u32, depth_frame.height() as u32),
-            &added_image,
-        );
-        window.set_image("Color + Depth", image).unwrap();
+        // Send points to rendering thread
+        tx.send(points).unwrap();
     }
 }

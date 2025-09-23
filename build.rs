@@ -6,6 +6,9 @@ fn main() {
     // Configure and build the C++ library using CMake
     let mut dst = cmake::Config::new("OrbbecSDK");
     dst.define("CMAKE_POLICY_VERSION_MINIMUM", "3.10");
+    dst.define("OB_BUILD_DOCS", "OFF");
+    dst.define("OB_BUILD_TOOLS", "OFF");
+    dst.define("OB_BUILD_TESTS", "OFF");
 
     // cmake-rs has some issues setting the correct flags on Windows
     #[cfg(target_os = "windows")]

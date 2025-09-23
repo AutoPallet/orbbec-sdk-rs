@@ -291,6 +291,7 @@ impl<'a> DeviceList<'a> {
     }
 }
 
+/// An iterator over the devices in a device list
 pub struct DeviceListIterator<'a, 'b> {
     device_list: &'b DeviceList<'a>,
     index: usize,
@@ -298,7 +299,7 @@ pub struct DeviceListIterator<'a, 'b> {
 }
 
 impl<'a, 'b> DeviceListIterator<'a, 'b> {
-    pub fn new(device_list: &'a DeviceList<'b>) -> Result<Self, OrbbecError> {
+    fn new(device_list: &'a DeviceList<'b>) -> Result<Self, OrbbecError> {
         Ok(DeviceListIterator {
             device_list,
             index: 0,

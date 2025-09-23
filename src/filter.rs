@@ -1,19 +1,22 @@
 //! Filter module
 use crate::{
-    ConvertType, HoleFillMode, StreamType,
+    ConvertType, CoordinateSystem, Format, HoleFillMode, StreamType,
     error::{OrbbecError, OrbbecErrorData},
-    frame::Frame,
+    frame::{ColorFrame, DepthFrame, Frame, FrameSet, PointCloudFrame},
     stream::VideoStreamProfile,
     sys::filter::OBFilter,
 };
 
 /// Filter trait
-pub trait Filter<F: Frame>: AsRef<OBFilter> {
+///
+/// F1: Input frame type.
+/// F2: Output frame type.
+pub trait Filter<F1: Frame, F2: Frame>: AsRef<OBFilter> {
     /// Process a frame with the filter
-    fn process(&self, frame: &F) -> Result<F, OrbbecError> {
+    fn process(&self, frame: &F1) -> Result<F2, OrbbecError> {
         self.as_ref()
             .process(frame.as_ref())
-            .map(|f| F::from(f))
+            .map(|f| F2::from(f))
             .map_err(OrbbecError::from)
     }
 }
@@ -51,7 +54,8 @@ impl AsRef<OBFilter> for DecimationFilter {
     }
 }
 
-impl<F: Frame> Filter<F> for DecimationFilter {}
+impl Filter<DepthFrame, DepthFrame> for DecimationFilter {}
+impl Filter<ColorFrame, ColorFrame> for DecimationFilter {}
 
 /// Format Convert Filter
 ///
@@ -85,7 +89,8 @@ impl AsRef<OBFilter> for FormatConvertFilter {
     }
 }
 
-impl<F: Frame> Filter<F> for FormatConvertFilter {}
+impl Filter<DepthFrame, DepthFrame> for FormatConvertFilter {}
+impl Filter<ColorFrame, ColorFrame> for FormatConvertFilter {}
 
 /// Hole Filling Filter
 ///
@@ -128,7 +133,7 @@ impl AsRef<OBFilter> for HoleFillingFilter {
     }
 }
 
-impl<F: Frame> Filter<F> for HoleFillingFilter {}
+impl Filter<DepthFrame, DepthFrame> for HoleFillingFilter {}
 
 /// Temporal Filter
 ///
@@ -183,7 +188,7 @@ impl AsRef<OBFilter> for TemporalFilter {
     }
 }
 
-impl<F: Frame> Filter<F> for TemporalFilter {}
+impl Filter<DepthFrame, DepthFrame> for TemporalFilter {}
 
 /// Spatial Fast Filter
 ///
@@ -228,7 +233,7 @@ impl AsRef<OBFilter> for SpatialFastFilter {
     }
 }
 
-impl<F: Frame> Filter<F> for SpatialFastFilter {}
+impl Filter<DepthFrame, DepthFrame> for SpatialFastFilter {}
 
 /// Spatial Moderate Filter
 ///
@@ -295,7 +300,7 @@ impl AsRef<OBFilter> for SpatialModerateFilter {
     }
 }
 
-impl<F: Frame> Filter<F> for SpatialModerateFilter {}
+impl Filter<DepthFrame, DepthFrame> for SpatialModerateFilter {}
 
 ///  Spatial Advanced Filter
 ///
@@ -373,7 +378,7 @@ impl AsRef<OBFilter> for SpatialAdvancedFilter {
     }
 }
 
-impl<F: Frame> Filter<F> for SpatialAdvancedFilter {}
+impl Filter<DepthFrame, DepthFrame> for SpatialAdvancedFilter {}
 
 /// Threshold filter
 ///
@@ -416,7 +421,7 @@ impl AsRef<OBFilter> for ThresholdFilter {
     }
 }
 
-impl<F: Frame> Filter<F> for ThresholdFilter {}
+impl Filter<DepthFrame, DepthFrame> for ThresholdFilter {}
 
 /// Align filter
 ///
@@ -491,4 +496,88 @@ impl AsRef<OBFilter> for AlignFilter {
     }
 }
 
-impl<F: Frame> Filter<F> for AlignFilter {}
+impl Filter<FrameSet, FrameSet> for AlignFilter {}
+impl Filter<DepthFrame, DepthFrame> for AlignFilter {}
+
+/// Point Cloud Filter
+///
+/// This filter generates a point cloud from an aligned frameset (depth + color).
+pub struct PointCloudFilter {
+    inner: OBFilter,
+}
+
+impl PointCloudFilter {
+    /// Create a new point cloud filter.
+    pub fn new() -> Result<Self, OrbbecError> {
+        match OBFilter::new(c"PointCloudFilter")? {
+            Some(f) => Ok(PointCloudFilter { inner: f }),
+            None => {
+                let err_data = OrbbecErrorData {
+                    message: "Point cloud filter is not available".to_string(),
+                    function: "PointCloudFilter::new".to_string(),
+                    args: "".to_string(),
+                };
+
+                Err(OrbbecError::NotImplemented(err_data))
+            }
+        }
+    }
+
+    /// Set if point cloud should have color information (RGB point cloud) or not (XYZ point cloud).
+    ///
+    /// ### Arguments
+    /// * `color` - Whether to generate RGB point cloud.
+    pub fn set_color(&mut self, color: bool) -> Result<(), OrbbecError> {
+        let format = if color {
+            Format::RGBPoint
+        } else {
+            Format::Point
+        };
+
+        self.inner
+            .set_config_value(c"pointFormat", format as u32 as f64)
+            .map_err(OrbbecError::from)
+    }
+
+    /// Set point cloud coordinate data scale.
+    ///
+    /// ### Arguments
+    /// * `scale` - The scale factor.
+    pub fn set_coordinate_scale(&mut self, scale: f32) -> Result<(), OrbbecError> {
+        self.inner
+            .set_config_value(c"coordinateDataScale", scale as f64)
+            .map_err(OrbbecError::from)
+    }
+
+    /// Set point cloud color data normalization.
+    /// Color data normalization will scale the color values to [0, 1].
+    ///
+    /// This only applies when generating RGB point cloud.
+    ///
+    /// ### Arguments
+    /// * `normalize` - Whether to normalize color data.
+    pub fn set_color_normalize(&mut self, normalize: bool) -> Result<(), OrbbecError> {
+        self.inner
+            .set_config_value(c"colorDataNormalization", if normalize { 1.0 } else { 0.0 })
+            .map_err(OrbbecError::from)
+    }
+
+    /// Set point cloud coordinate system.
+    ///
+    /// ### Arguments
+    /// * `system` - The coordinate system.
+    pub fn set_coordinate_system(&mut self, system: CoordinateSystem) -> Result<(), OrbbecError> {
+        self.inner
+            .set_config_value(c"coordinateSystemType", system as u32 as f64)
+            .map_err(OrbbecError::from)
+    }
+}
+
+impl AsRef<OBFilter> for PointCloudFilter {
+    fn as_ref(&self) -> &OBFilter {
+        &self.inner
+    }
+}
+
+impl Filter<DepthFrame, PointCloudFrame> for PointCloudFilter {}
+impl Filter<FrameSet, PointCloudFrame> for PointCloudFilter {}

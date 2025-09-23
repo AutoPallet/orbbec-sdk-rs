@@ -663,8 +663,11 @@ pub enum OBStreamType {
 /// Permission type
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum OBPermissionType {
+    /// Read permission
     Read = orb::OBPermissionType_OB_PERMISSION_READ as isize,
+    /// Write permission
     Write = orb::OBPermissionType_OB_PERMISSION_WRITE as isize,
+    /// Read and write permission
     ReadWrite = orb::OBPermissionType_OB_PERMISSION_READ_WRITE as isize,
 }
 
@@ -677,4 +680,13 @@ pub enum OBHoleFillMode {
     Nearest = orb::OBHoleFillingMode_OB_HOLE_FILL_NEAREST as isize,
     /// Fill with the farthest pixel (distance to camera) value
     Farthest = orb::OBHoleFillingMode_OB_HOLE_FILL_FAREST as isize,
+}
+
+/// Point Cloud Coordinate System
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum OBCoordinateSystem {
+    /// Left Handed Coordinate System
+    LeftHanded = orb::OB_COORDINATE_SYSTEM_TYPE_OB_LEFT_HAND_COORDINATE_SYSTEM as isize,
+    /// Right Handed Coordinate System
+    RightHanded = orb::OB_COORDINATE_SYSTEM_TYPE_OB_RIGHT_HAND_COORDINATE_SYSTEM as isize,
 }

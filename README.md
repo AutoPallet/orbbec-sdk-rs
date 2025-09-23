@@ -9,13 +9,24 @@ Rust support for Orbbec 3D Cameras.
 This project provides high-level bindings to [Orbbec SDK v2](https://github.com/orbbec/OrbbecSDK_v2).
 
 ## Examples
-Check the examples folder [README](https://github.com/danielstuart14/orbbec-sdk-rs).
+Check the [examples folder](https://github.com/danielstuart14/orbbec-sdk-rs/tree/master/examples).
 
 ## Roadmap
 🟢 Device Enumeration / Configuration  
-🟢 Video Streams (RGB / Depth)  
-🚧 Filters  
-🔴 Point Cloud  
+🟢 Video Streams (Color / Depth)  
+🚧 Filters:  
+&nbsp;&nbsp;&nbsp;&nbsp;🟢 Decimation Filter  
+&nbsp;&nbsp;&nbsp;&nbsp;🟢 Format Converter Filter  
+&nbsp;&nbsp;&nbsp;&nbsp;🟢 Hole Filling Filter  
+&nbsp;&nbsp;&nbsp;&nbsp;🟢 Temporal Filter  
+&nbsp;&nbsp;&nbsp;&nbsp;🟢 Spatial Filters:  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🟢 Spatial Fast Filter  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🟢 Spatial Moderate Filter  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🟢 Spatial Advanced Filter  
+&nbsp;&nbsp;&nbsp;&nbsp;🟢 Threshold Filter  
+&nbsp;&nbsp;&nbsp;&nbsp;🟢 Align Filter  
+&nbsp;&nbsp;&nbsp;&nbsp;🟢 Point Cloud Filter  
+🚧 Point Cloud  
 🔴 Accelerometer / Gyroscope  
 
 ## License

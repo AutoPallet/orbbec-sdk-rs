@@ -74,6 +74,22 @@ impl OBFrame {
         })
     }
 
+    /// Get the point cloud frame from the frameset.
+    /// Only valid for frameset frames.
+    pub fn get_points_frame(&self) -> Result<Option<OBFrame>, OBError> {
+        let mut err_ptr = std::ptr::null_mut();
+
+        let frame = unsafe { orb::ob_frameset_get_points_frame(self.inner, &mut err_ptr) };
+
+        OBError::consume(err_ptr)?;
+
+        Ok(if frame.is_null() {
+            None
+        } else {
+            Some(OBFrame::new(frame))
+        })
+    }
+
     /// Get the width of the video frame.
     /// Only valid for video frames.
     pub fn get_video_width(&self) -> Result<u32, OBError> {
@@ -96,5 +112,42 @@ impl OBFrame {
         OBError::consume(err_ptr)?;
 
         Ok(height)
+    }
+
+    /// Get the width of the point cloud frame.
+    /// Only valid for point cloud frames.
+    pub fn get_points_width(&self) -> Result<u32, OBError> {
+        let mut err_ptr = std::ptr::null_mut();
+
+        let width = unsafe { orb::ob_point_cloud_frame_get_width(self.inner, &mut err_ptr) };
+
+        OBError::consume(err_ptr)?;
+
+        Ok(width)
+    }
+
+    /// Get the height of the point cloud frame.
+    /// Only valid for point cloud frames.
+    pub fn get_points_height(&self) -> Result<u32, OBError> {
+        let mut err_ptr = std::ptr::null_mut();
+
+        let height = unsafe { orb::ob_point_cloud_frame_get_height(self.inner, &mut err_ptr) };
+
+        OBError::consume(err_ptr)?;
+
+        Ok(height)
+    }
+
+    /// Get the point cloud coordinate scale.
+    /// Only valid for point cloud frames.
+    pub fn get_points_scale(&self) -> Result<f32, OBError> {
+        let mut err_ptr = std::ptr::null_mut();
+
+        let scale =
+            unsafe { orb::ob_points_frame_get_coordinate_value_scale(self.inner, &mut err_ptr) };
+
+        OBError::consume(err_ptr)?;
+
+        Ok(scale)
     }
 }

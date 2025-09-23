@@ -26,3 +26,9 @@ The examples are organized by increasing complexity:
    cargo run --release --example depth_aligned
    ```  
    Aligns a depth stream with a corresponding color stream.
+
+5. **Point Cloud**  
+   ```bash
+   cargo run --release --example point_cloud
+   ```  
+   Converts depth and color streams to a point cloud.

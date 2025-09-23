@@ -1,3 +1,6 @@
+#![doc = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/README.md"))]
+#![warn(missing_docs, future_incompatible, keyword_idents)]
+
 pub mod device;
 pub mod error;
 pub mod filter;
@@ -31,6 +34,9 @@ pub use crate::sys::enums::OBHoleFillMode as HoleFillMode;
 #[doc(inline)]
 pub use crate::sys::enums::OBConvertFormat as ConvertType;
 
+#[doc(inline)]
+pub use crate::sys::enums::OBCoordinateSystem as CoordinateSystem;
+
 /// There can only be a single context at a time
 /// C API does not enforce this, but having multiple contexts
 /// will lead to crashes and undefined behavior
@@ -54,7 +60,7 @@ impl Context {
             .is_err()
         {
             let err_data = error::OrbbecErrorData {
-                message: "A context has already been created".to_string(),
+                message: "A context already exists".to_string(),
                 function: "Context::new".to_string(),
                 args: "".to_string(),
             };

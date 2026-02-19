@@ -1,14 +1,44 @@
+use std::{
+    env, fs,
+    path::{Path, PathBuf},
+};
+
 fn main() {
     if cfg!(feature = "docs-only") {
         return;
     }
 
+    // Tell Cargo to rerun if anything in the SDK changes
+    println!("cargo:rerun-if-changed=OrbbecSDK");
+    println!("cargo:rerun-if-changed=build.rs");
+
+    let out = PathBuf::from(env::var("OUT_DIR").unwrap());
+    let src = PathBuf::from("OrbbecSDK");
+    let work_src = out.join("orbbec_src");
+    let stamp = out.join("orbbec_src.stamp");
+
+    let current_stamp = dir_fingerprint(&src).unwrap();
+
+    let needs_refresh = match fs::read_to_string(&stamp) {
+        Ok(old) => old != current_stamp,
+        Err(_) => true,
+    };
+
+    if needs_refresh {
+        if work_src.exists() {
+            fs::remove_dir_all(&work_src).unwrap();
+        }
+        copy_dir_all(&src, &work_src).unwrap();
+        fs::write(&stamp, &current_stamp).unwrap();
+    }
+
     // Configure and build the C++ library using CMake
-    let mut dst = cmake::Config::new("OrbbecSDK");
+    let mut dst = cmake::Config::new(work_src);
     dst.define("CMAKE_POLICY_VERSION_MINIMUM", "3.10");
-    dst.define("OB_BUILD_DOCS", "OFF");
-    dst.define("OB_BUILD_TOOLS", "OFF");
+    dst.define("OB_BUILD_EXAMPLES", "OFF");
     dst.define("OB_BUILD_TESTS", "OFF");
+    dst.define("OB_BUILD_TOOLS", "OFF");
+    dst.define("OB_BUILD_DOCS", "OFF");
 
     // cmake-rs has some issues setting the correct flags on Windows
     #[cfg(target_os = "windows")]
@@ -92,6 +122,8 @@ fn main() {
     {
         let cargo_manifest_dir = std::env::current_dir().unwrap();
 
+        let target = std::env::var("TARGET").unwrap();
+
         // The bindgen::Builder is the main entry point
         // to bindgen, and lets you build up options for
         // the resulting bindings.
@@ -104,6 +136,8 @@ fn main() {
             .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
             // Set the include path for the OrbbecSDK headers
             .clang_arg("-IOrbbecSDK/include/")
+            // Set the target architecture (The committed bindings are for x86_64-unknown-linux-gnu!)
+            .clang_arg(format!("--target={target}"))
             // Convert enum type
             .translate_enum_integer_types(true)
             // Finish the builder and generate the bindings.
@@ -121,4 +155,51 @@ fn main() {
             .write_to_file(bindings_file)
             .expect("Couldn't write bindings!");
     }
+}
+
+fn copy_dir_all(src: &Path, dst: &Path) -> std::io::Result<()> {
+    fs::create_dir_all(dst)?;
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let ty = entry.file_type()?;
+        let from = entry.path();
+        let to = dst.join(entry.file_name());
+        if ty.is_dir() {
+            copy_dir_all(&from, &to)?;
+        } else {
+            fs::copy(&from, &to)?;
+        }
+    }
+    Ok(())
+}
+
+fn dir_fingerprint(root: &Path) -> std::io::Result<String> {
+    let mut entries = Vec::new();
+    collect_entries(root, root, &mut entries)?;
+    Ok(entries.join("\n"))
+}
+
+fn collect_entries(root: &Path, dir: &Path, out: &mut Vec<String>) -> std::io::Result<()> {
+    for entry in fs::read_dir(dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        let ty = entry.file_type()?;
+
+        if ty.is_dir() {
+            collect_entries(root, &path, out)?;
+        } else {
+            let rel = path.strip_prefix(root).unwrap();
+            let meta = entry.metadata()?;
+            let len = meta.len();
+            let modified = meta
+                .modified()?
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs();
+
+            out.push(format!("{}:{}:{}", rel.display(), len, modified));
+        }
+    }
+    out.sort();
+    Ok(())
 }

@@ -1,10 +1,28 @@
+use std::{
+    env, fs,
+    path::{Path, PathBuf},
+};
+
 fn main() {
     if cfg!(feature = "docs-only") {
         return;
     }
 
+    let out = PathBuf::from(env::var("OUT_DIR").unwrap());
+    let src = PathBuf::from("OrbbecSDK");
+    let work_src = out.join("orbbec_src");
+
+    // Clean + copy
+    if work_src.exists() {
+        fs::remove_dir_all(&work_src).unwrap();
+    }
+    copy_dir_all(&src, &work_src).unwrap();
+
+    // Tell Cargo to rerun if anything in the SDK changes
+    println!("cargo:rerun-if-changed=OrbbecSDK");
+
     // Configure and build the C++ library using CMake
-    let mut dst = cmake::Config::new("OrbbecSDK");
+    let mut dst = cmake::Config::new(work_src);
     dst.define("CMAKE_POLICY_VERSION_MINIMUM", "3.10");
     dst.define("OB_BUILD_DOCS", "OFF");
     dst.define("OB_BUILD_TOOLS", "OFF");
@@ -121,4 +139,20 @@ fn main() {
             .write_to_file(bindings_file)
             .expect("Couldn't write bindings!");
     }
+}
+
+fn copy_dir_all(src: &Path, dst: &Path) -> std::io::Result<()> {
+    fs::create_dir_all(dst)?;
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let ty = entry.file_type()?;
+        let from = entry.path();
+        let to = dst.join(entry.file_name());
+        if ty.is_dir() {
+            copy_dir_all(&from, &to)?;
+        } else {
+            fs::copy(&from, &to)?;
+        }
+    }
+    Ok(())
 }

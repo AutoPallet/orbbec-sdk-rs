@@ -8,6 +8,25 @@ pub trait Frame: From<OBFrame> + AsRef<OBFrame> {}
 macro_rules! impl_video_frame {
     ($t:ident) => {
         impl $t {
+            /// Get the device timestamp of the video frame
+            pub fn timestamp_us(&self) -> u64 {
+                self.inner.get_timestamp_us().unwrap()
+            }
+
+            /// Get the system timestamp of the video frame
+            pub fn system_timestamp_us(&self) -> Result<u64, OrbbecError> {
+                self.inner
+                    .get_system_timestamp_us()
+                    .map_err(OrbbecError::from)
+            }
+
+            /// Get the global timestamp of the video frame
+            pub fn global_timestamp_us(&self) -> Result<u64, OrbbecError> {
+                self.inner
+                    .get_global_timestamp_us()
+                    .map_err(OrbbecError::from)
+            }
+
             /// Get the raw data of the video frame
             pub fn raw_data(&self) -> &[u8] {
                 // Unwrap is safe here because internal pointer is guaranteed to be valid

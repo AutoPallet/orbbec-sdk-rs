@@ -37,6 +37,12 @@ pub use crate::sys::enums::OBConvertFormat as ConvertType;
 #[doc(inline)]
 pub use crate::sys::enums::OBCoordinateSystem as CoordinateSystem;
 
+#[doc(inline)]
+pub use crate::sys::enums::OBAlignMode as AlignMode;
+
+#[doc(inline)]
+pub use crate::sys::enums::OBFrameAggregateOutputMode as FrameAggregateOutputMode;
+
 /// There can only be a single context at a time
 /// C API does not enforce this, but having multiple contexts
 /// will lead to crashes and undefined behavior

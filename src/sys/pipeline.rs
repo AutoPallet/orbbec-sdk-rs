@@ -1,6 +1,8 @@
 //! Pipeline configuration and management
+use crate::sys::enums::OBFrameAggregateOutputMode;
+
 use super::device::OBDevice;
-use super::enums::OBSensorType;
+use super::enums::{OBAlignMode, OBSensorType};
 use super::frame::OBFrame;
 use super::stream::{OBStreamProfile, OBStreamProfileList};
 use super::{OBError, drop_ob_object, orb};
@@ -34,6 +36,40 @@ impl OBConfig {
                 profile.inner(),
                 &mut err_ptr,
             )
+        };
+
+        OBError::consume(err_ptr)
+    }
+
+    /// Set the alignment mode for the pipeline configuration
+    pub fn set_align_mode(&self, mode: OBAlignMode) -> Result<(), OBError> {
+        let mut err_ptr = std::ptr::null_mut();
+
+        unsafe { orb::ob_config_set_align_mode(self.inner, mode as i32, &mut err_ptr) };
+
+        OBError::consume(err_ptr)
+    }
+
+    /// Set whether depth scaling is required after enable depth to color alignment
+    pub fn set_depth_scale_after_align_require(&self, enable: bool) -> Result<(), OBError> {
+        let mut err_ptr = std::ptr::null_mut();
+
+        unsafe {
+            orb::ob_config_set_depth_scale_after_align_require(self.inner, enable, &mut err_ptr)
+        };
+
+        OBError::consume(err_ptr)
+    }
+
+    /// Set the frame aggregation output mode for the pipeline configuration
+    pub fn set_frame_aggregate_output_mode(
+        &self,
+        mode: OBFrameAggregateOutputMode,
+    ) -> Result<(), OBError> {
+        let mut err_ptr = std::ptr::null_mut();
+
+        unsafe {
+            orb::ob_config_set_frame_aggregate_output_mode(self.inner, mode as i32, &mut err_ptr)
         };
 
         OBError::consume(err_ptr)
@@ -78,6 +114,28 @@ impl OBPipeline {
 
         let profile_list = unsafe {
             orb::ob_pipeline_get_stream_profile_list(self.inner, sensor as i32, &mut err_ptr)
+        };
+
+        OBError::consume(err_ptr)?;
+
+        Ok(OBStreamProfileList::new(profile_list))
+    }
+
+    /// Get the list of D2C-enabled depth sensor resolutions corresponding to the input color sensor resolution
+    pub fn get_d2c_depth_profile_list(
+        &self,
+        color_profile: &OBStreamProfile,
+        align_mode: OBAlignMode,
+    ) -> Result<OBStreamProfileList, OBError> {
+        let mut err_ptr = std::ptr::null_mut();
+
+        let profile_list = unsafe {
+            orb::ob_get_d2c_depth_profile_list(
+                self.inner,
+                color_profile.inner(),
+                align_mode as i32,
+                &mut err_ptr,
+            )
         };
 
         OBError::consume(err_ptr)?;

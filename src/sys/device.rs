@@ -208,6 +208,19 @@ impl OBDevice {
     pub fn load_preset(&self, preset_name: &CStr) -> Result<(), OBError> {
         call_ob_function!(orb::ob_device_load_preset, self.inner, preset_name.as_ptr())
     }
+
+    impl_ob_method!(
+        /// Check if the device supports global timestamp
+        is_global_timestamp_supported => bool,
+        orb::ob_device_is_global_timestamp_supported,
+    );
+
+    impl_ob_method!(
+        /// Enable or disable global timestamp
+        enable_global_timestamp => (),
+        orb::ob_device_enable_global_timestamp,
+        enabled: bool,
+    );
 }
 
 /// List of devices

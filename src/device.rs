@@ -220,6 +220,20 @@ impl Device {
     pub fn get_property<P: GetProperty>(&self) -> Result<P::Value, OrbbecError> {
         P::get_from(self)
     }
+
+    /// Check if the device supports global timestamp
+    pub fn is_global_timestamp_supported(&self) -> Result<bool, OrbbecError> {
+        self.inner
+            .is_global_timestamp_supported()
+            .map_err(OrbbecError::from)
+    }
+
+    /// Enable or disable global timestamp
+    pub fn enable_global_timestamp(&self, enabled: bool) -> Result<(), OrbbecError> {
+        self.inner
+            .enable_global_timestamp(enabled)
+            .map_err(OrbbecError::from)
+    }
 }
 
 /// A list of Orbbec devices available

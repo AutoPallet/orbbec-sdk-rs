@@ -18,6 +18,42 @@ impl OBFrame {
         self.inner
     }
 
+    /// Get the frame timestamp (also known as device timestamp, hardware timestamp) of the frame in microseconds.
+    /// The hardware timestamp is the time point when the frame was captured by the device (Typically in the mid-exposure, unless otherwise stated), on device clock domain.
+    pub fn get_timestamp_us(&self) -> Result<u64, OBError> {
+        let mut err_ptr = std::ptr::null_mut();
+
+        let timestamp = unsafe { orb::ob_frame_get_timestamp_us(self.inner, &mut err_ptr) };
+
+        OBError::consume(err_ptr)?;
+
+        Ok(timestamp)
+    }
+
+    /// Get the system timestamp of the frame in microseconds.
+    /// The system timestamp is the time point when the frame was received by the host, on host clock domain.
+    pub fn get_system_timestamp_us(&self) -> Result<u64, OBError> {
+        let mut err_ptr = std::ptr::null_mut();
+
+        let timestamp = unsafe { orb::ob_frame_get_system_timestamp_us(self.inner, &mut err_ptr) };
+
+        OBError::consume(err_ptr)?;
+
+        Ok(timestamp)
+    }
+
+    /// Get the global timestamp of the frame in microseconds.
+    /// The global timestamp is the time point when the frame was captured by the device, and has been converted to the host clock domain. The conversion process base on the frame timestamp and can eliminate the timer drift of the device
+    pub fn get_global_timestamp_us(&self) -> Result<u64, OBError> {
+        let mut err_ptr = std::ptr::null_mut();
+
+        let timestamp = unsafe { orb::ob_frame_get_global_timestamp_us(self.inner, &mut err_ptr) };
+
+        OBError::consume(err_ptr)?;
+
+        Ok(timestamp)
+    }
+
     /// Get the data buffer of a frame
     pub fn get_data(&self) -> Result<&[u8], OBError> {
         let mut err_ptr = std::ptr::null_mut();

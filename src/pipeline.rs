@@ -6,7 +6,7 @@ use crate::{
     device::Device,
     frame::FrameSet,
     stream::{StreamProfile, StreamProfileList, VideoStreamProfile},
-    sys::pipeline::{OBConfig, OBPipeline},
+    sys::pipeline::{OBConfig, OBPipeline, frameset_trampoline},
 };
 
 /// Pipeline Configuration
@@ -68,9 +68,12 @@ impl Config {
     }
 }
 
+type PipelineCallback = Box<Box<dyn FnMut(FrameSet) + Send>>;
+
 /// Pipeline
 pub struct Pipeline {
     inner: OBPipeline,
+    _callback: Option<PipelineCallback>,
 }
 
 impl Pipeline {
@@ -80,7 +83,10 @@ impl Pipeline {
     pub fn new(device: &Device) -> Result<Self, crate::error::OrbbecError> {
         let pipeline = OBPipeline::new(device.inner()).map_err(crate::error::OrbbecError::from)?;
 
-        Ok(Pipeline { inner: pipeline })
+        Ok(Pipeline {
+            inner: pipeline,
+            _callback: None,
+        })
     }
 
     /// Get the device associated with the pipeline
@@ -134,6 +140,36 @@ impl Pipeline {
         self.inner
             .start_with_config(&config.inner)
             .map_err(crate::error::OrbbecError::from)
+    }
+
+    /// Start the pipeline with the given configuration, invoking a callback for each frameset
+    /// ### Arguments
+    /// * `config` - Configuration to use for the pipeline
+    /// * `callback` - Called on each incoming frameset; must be `Send + 'static`
+    pub fn start_with_callback<F>(
+        &mut self,
+        config: &Config,
+        callback: F,
+    ) -> Result<(), crate::error::OrbbecError>
+    where
+        F: FnMut(FrameSet) + Send + 'static,
+    {
+        let boxed: PipelineCallback = Box::new(Box::new(callback));
+        let user_data = boxed.as_ref() as *const _ as *mut std::ffi::c_void;
+
+        self.inner
+            .start_with_callback(&config.inner, Some(frameset_trampoline), user_data)
+            .map_err(crate::error::OrbbecError::from)?;
+
+        self._callback = Some(boxed);
+        Ok(())
+    }
+
+    /// Stop the pipeline
+    pub fn stop(&mut self) -> Result<(), crate::error::OrbbecError> {
+        let res = self.inner.stop().map_err(crate::error::OrbbecError::from);
+        self._callback = None;
+        res
     }
 
     /// Set if frames should be synchronized

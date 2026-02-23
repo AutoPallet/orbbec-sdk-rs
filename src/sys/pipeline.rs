@@ -58,6 +58,18 @@ pub struct OBPipeline {
 
 drop_ob_object!(OBPipeline, ob_delete_pipeline);
 
+pub(crate) type OBFramesetCallback = orb::ob_frameset_callback;
+
+pub(crate) unsafe extern "C" fn frameset_trampoline(
+    frameset: *mut orb::ob_frame,
+    user_data: *mut std::ffi::c_void,
+) {
+    let callback =
+        unsafe { &mut *(user_data as *mut Box<dyn FnMut(crate::frame::FrameSet) + Send>) };
+    let frame = OBFrame::new(frameset);
+    callback(crate::frame::FrameSet::from(frame));
+}
+
 impl OBPipeline {
     pub fn new(device: &OBDevice) -> Result<Self, OBError> {
         let pipeline = call_ob_function!(orb::ob_create_pipeline_with_device, device.inner())?;
@@ -110,6 +122,28 @@ impl OBPipeline {
     pub fn start_with_config(&self, config: &OBConfig) -> Result<(), OBError> {
         call_ob_function!(orb::ob_pipeline_start_with_config, self.inner, config.inner)
     }
+
+    /// Start the pipeline with callback
+    pub fn start_with_callback(
+        &self,
+        config: &OBConfig,
+        callback: OBFramesetCallback,
+        user_data: *mut std::ffi::c_void,
+    ) -> Result<(), OBError> {
+        call_ob_function!(
+            orb::ob_pipeline_start_with_callback,
+            self.inner,
+            config.inner,
+            callback,
+            user_data
+        )
+    }
+
+    impl_ob_method!(
+        /// Stop the pipeline
+        stop => (),
+        orb::ob_pipeline_stop,
+    );
 
     /// Wait for a set of frames to be returned synchronously
     pub fn wait_for_frameset(&self, timeout_ms: u32) -> Result<Option<OBFrame>, OBError> {

@@ -261,6 +261,27 @@ impl OBDevice {
         Ok(value)
     }
 
+    pub fn is_global_timestamp_supported(&self) -> Result<bool, OBError> {
+        let mut err_ptr = std::ptr::null_mut();
+
+        let supported =
+            unsafe { orb::ob_device_is_global_timestamp_supported(self.inner, &mut err_ptr) };
+
+        OBError::consume(err_ptr)?;
+
+        Ok(supported)
+    }
+
+    pub fn enable_global_timestamp(&self, enabled: bool) -> Result<(), OBError> {
+        let mut err_ptr = std::ptr::null_mut();
+
+        unsafe { orb::ob_device_enable_global_timestamp(self.inner, enabled, &mut err_ptr) };
+
+        OBError::consume(err_ptr)?;
+
+        Ok(())
+    }
+
     /// Load the device preset
     /// After loading the preset, the settings in the preset will set to the device immediately. Therefore, it is recommended to re-read the device settings to update the user program temporarily.
     pub fn load_preset(&self, preset_name: &CStr) -> Result<(), OBError> {

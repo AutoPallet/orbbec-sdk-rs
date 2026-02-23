@@ -1,4 +1,6 @@
 //! Pipeline configuration and management
+use std::os::raw::c_void;
+
 use crate::sys::enums::OBFrameAggregateOutputMode;
 
 use super::device::OBDevice;
@@ -83,6 +85,18 @@ pub struct OBPipeline {
 
 drop_ob_object!(OBPipeline, ob_delete_pipeline);
 
+pub(crate) type OBFramesetCallback = orb::ob_frameset_callback;
+
+pub(crate) unsafe extern "C" fn frameset_trampoline(
+    frameset: *mut orb::ob_frame,
+    user_data: *mut c_void,
+) {
+    let callback =
+        unsafe { &mut *(user_data as *mut Box<dyn FnMut(crate::frame::FrameSet) + Send>) };
+    let frame = OBFrame::new(frameset);
+    callback(crate::frame::FrameSet::from(frame));
+}
+
 impl OBPipeline {
     pub fn new(device: &OBDevice) -> Result<Self, OBError> {
         let mut err_ptr = std::ptr::null_mut();
@@ -166,6 +180,37 @@ impl OBPipeline {
         let mut err_ptr = std::ptr::null_mut();
 
         unsafe { orb::ob_pipeline_start_with_config(self.inner, config.inner, &mut err_ptr) };
+
+        OBError::consume(err_ptr)
+    }
+
+    /// Start the pipeline with callback
+    pub fn start_with_callback(
+        &self,
+        config: &OBConfig,
+        callback: OBFramesetCallback,
+        user_data: *mut c_void,
+    ) -> Result<(), OBError> {
+        let mut err_ptr = std::ptr::null_mut();
+
+        unsafe {
+            orb::ob_pipeline_start_with_callback(
+                self.inner,
+                config.inner,
+                callback,
+                user_data,
+                &mut err_ptr,
+            )
+        };
+
+        OBError::consume(err_ptr)
+    }
+
+    /// Stop the pipeline
+    pub fn stop(&self) -> Result<(), OBError> {
+        let mut err_ptr = std::ptr::null_mut();
+
+        unsafe { orb::ob_pipeline_stop(self.inner, &mut err_ptr) };
 
         OBError::consume(err_ptr)
     }

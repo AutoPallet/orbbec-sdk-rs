@@ -72,6 +72,53 @@ impl OBStreamProfile {
 
         Ok(OBCameraIntrinsic::from(intrinsics))
     }
+
+    /// Get stream profile format
+    pub fn get_format(&self) -> Result<OBFormat, OBError> {
+        let mut err_ptr = std::ptr::null_mut();
+
+        let format = unsafe { orb::ob_stream_profile_get_format(self.inner, &mut err_ptr) };
+
+        OBError::consume(err_ptr)?;
+
+        Ok(format.into())
+    }
+
+    /// Get the frame rate of the video stream.
+    /// Returns error if the profile is not a video stream profile.
+    pub fn get_video_fps(&self) -> Result<u32, OBError> {
+        let mut err_ptr = std::ptr::null_mut();
+
+        let fps = unsafe { orb::ob_video_stream_profile_get_fps(self.inner, &mut err_ptr) };
+
+        OBError::consume(err_ptr)?;
+
+        Ok(fps)
+    }
+
+    /// Get the width of the video stream.
+    /// Returns error if the profile is not a video stream profile.
+    pub fn get_video_width(&self) -> Result<u32, OBError> {
+        let mut err_ptr = std::ptr::null_mut();
+
+        let width = unsafe { orb::ob_video_stream_profile_get_width(self.inner, &mut err_ptr) };
+
+        OBError::consume(err_ptr)?;
+
+        Ok(width)
+    }
+
+    /// Get the height of the video stream.
+    /// Returns error if the profile is not a video stream profile.
+    pub fn get_video_height(&self) -> Result<u32, OBError> {
+        let mut err_ptr = std::ptr::null_mut();
+
+        let height = unsafe { orb::ob_video_stream_profile_get_height(self.inner, &mut err_ptr) };
+
+        OBError::consume(err_ptr)?;
+
+        Ok(height)
+    }
 }
 
 /// List of video stream profiles

@@ -125,4 +125,70 @@ impl StreamProfileList {
             .map(VideoStreamProfile::new)
             .map_err(OrbbecError::from)
     }
+
+    /// Get the number of stream profiles in this list
+    pub fn len(&self) -> Result<usize, OrbbecError> {
+        self.inner
+            .get_count()
+            .map(|count| count as usize)
+            .map_err(OrbbecError::from)
+    }
+
+    /// Return whether this list has no profiles
+    pub fn is_empty(&self) -> Result<bool, OrbbecError> {
+        Ok(self.len()? == 0)
+    }
+
+    /// Get the video stream profile at `index`
+    pub fn get(&self, index: usize) -> Result<VideoStreamProfile, OrbbecError> {
+        self.inner
+            .get_stream_profile(index as u32)
+            .map(VideoStreamProfile::new)
+            .map_err(OrbbecError::from)
+    }
+
+    /// Get an iterator over the stream profiles in the list.
+    pub fn iter(&self) -> StreamProfileListIterator<'_> {
+        StreamProfileListIterator::new(self)
+    }
+}
+
+/// An iterator over video stream profiles in a stream profile list
+pub struct StreamProfileListIterator<'a> {
+    profile_list: &'a StreamProfileList,
+    index: usize,
+    count: usize,
+}
+
+impl<'a> StreamProfileListIterator<'a> {
+    fn new(profile_list: &'a StreamProfileList) -> Self {
+        StreamProfileListIterator {
+            profile_list,
+            index: 0,
+            count: profile_list.len().unwrap(),
+        }
+    }
+}
+
+impl<'a> Iterator for StreamProfileListIterator<'a> {
+    type Item = Result<VideoStreamProfile, OrbbecError>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index >= self.count {
+            None
+        } else {
+            let profile = self.profile_list.get(self.index);
+            self.index += 1;
+            Some(profile)
+        }
+    }
+}
+
+impl<'a> IntoIterator for &'a StreamProfileList {
+    type Item = Result<VideoStreamProfile, OrbbecError>;
+    type IntoIter = StreamProfileListIterator<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
 }

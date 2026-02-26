@@ -303,6 +303,11 @@ impl<'a> DeviceList<'a> {
 
         device.map(Device::new).map_err(OrbbecError::from)
     }
+
+    /// Get an iterator over the devices in the list.
+    pub fn iter(&self) -> DeviceListIterator<'a, '_> {
+        DeviceListIterator::new(self)
+    }
 }
 
 /// An iterator over the devices in a device list
@@ -313,12 +318,12 @@ pub struct DeviceListIterator<'a, 'b> {
 }
 
 impl<'a, 'b> DeviceListIterator<'a, 'b> {
-    fn new(device_list: &'a DeviceList<'b>) -> Result<Self, OrbbecError> {
-        Ok(DeviceListIterator {
+    fn new(device_list: &'b DeviceList<'a>) -> Self {
+        DeviceListIterator {
             device_list,
             index: 0,
             count: device_list.len(),
-        })
+        }
     }
 }
 
@@ -327,12 +332,12 @@ impl<'a, 'b> Iterator for DeviceListIterator<'a, 'b> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.index >= self.count {
-            None
-        } else {
-            let device = self.device_list.get(self.index);
-            self.index += 1;
-            Some(device)
+            return None;
         }
+
+        let device = self.device_list.get(self.index);
+        self.index += 1;
+        Some(device)
     }
 }
 
@@ -344,6 +349,6 @@ where
     type IntoIter = DeviceListIterator<'a, 'b>;
 
     fn into_iter(self) -> Self::IntoIter {
-        DeviceListIterator::<'a, 'b>::new(self).unwrap()
+        self.iter()
     }
 }

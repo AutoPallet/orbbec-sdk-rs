@@ -1,5 +1,5 @@
 //! Stream profiles and related operations
-use super::{OBError, call_ob_function, drop_ob_object, orb};
+use super::{OBError, call_ob_function, drop_ob_object, impl_ob_method, orb};
 use crate::sys::orb::OBFormat;
 
 /// Camera intrinsic parameters
@@ -66,6 +66,33 @@ impl OBStreamProfile {
         let intrinsics = call_ob_function!(orb::ob_video_stream_profile_get_intrinsic, self.inner)?;
         Ok(OBCameraIntrinsic::from(intrinsics))
     }
+
+    impl_ob_method!(
+        /// Get stream profile format
+        get_format => OBFormat,
+        orb::ob_stream_profile_get_format,
+    );
+
+    impl_ob_method!(
+        /// Get the frame rate of the video stream.
+        /// Returns error if the profile is not a video stream profile.
+        get_video_fps => u32,
+        orb::ob_video_stream_profile_get_fps,
+    );
+
+    impl_ob_method!(
+        /// Get the width of the video stream.
+        /// Returns error if the profile is not a video stream profile.
+        get_video_width => u32,
+        orb::ob_video_stream_profile_get_width,
+    );
+
+    impl_ob_method!(
+        /// Get the height of the video stream.
+        /// Returns error if the profile is not a video stream profile.
+        get_video_height => u32,
+        orb::ob_video_stream_profile_get_height,
+    );
 }
 
 /// List of video stream profiles

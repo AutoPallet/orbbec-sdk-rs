@@ -107,27 +107,21 @@ impl OBStreamProfileList {
         OBStreamProfileList { inner }
     }
 
-    // /// Get the number of stream profiles in the list
-    // pub fn get_count(&self) -> Result<u32, OBError> {
-    //     let mut err_ptr = std::ptr::null_mut();
+    impl_ob_method!(
+        /// Get the number of stream profiles in the list
+        get_count => u32,
+        orb::ob_stream_profile_list_get_count,
+    );
 
-    //     let count = unsafe { orb::ob_stream_profile_list_get_count(self.inner, &mut err_ptr) };
-    //     OBError::consume(err_ptr)?;
-
-    //     Ok(count)
-    // }
-
-    // /// Get the stream profile at the specified index
-    // pub fn get_stream_profile(&self, index: i32) -> Result<OBStreamProfile, OBError> {
-    //     let mut err_ptr = std::ptr::null_mut();
-
-    //     let profile = unsafe {
-    //         orb::ob_stream_profile_list_get_profile(self.inner, index as c_int, &mut err_ptr)
-    //     };
-    //     OBError::consume(err_ptr)?;
-
-    //     Ok(OBStreamProfile::new(profile))
-    // }
+    /// Get the stream profile at the specified index
+    pub fn get_stream_profile(&self, index: u32) -> Result<OBStreamProfile, OBError> {
+        let profile = call_ob_function!(
+            orb::ob_stream_profile_list_get_profile,
+            self.inner,
+            index as i32
+        )?;
+        Ok(OBStreamProfile::new(profile))
+    }
 
     /// Match the corresponding ob_stream_profile through the passed parameters. If there are multiple matches, the first one in the list will be returned by default.
     pub fn get_video_stream_profile(

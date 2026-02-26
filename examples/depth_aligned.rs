@@ -1,13 +1,14 @@
-mod utils;
 use std::time::Duration;
 
+use clap::Parser;
+mod utils;
 use orbbec_sdk::{
-    Context, ConvertType, Format, PermissionType, SensorType,
+    Context, ConvertType, Format, LogSeverity, PermissionType, SensorType,
     device::DeviceProperty,
     filter::{AlignFilter, Filter, FormatConvertFilter},
+    logger::Logger,
     pipeline::{Config, Pipeline},
 };
-use show_image::{ImageInfo, ImageView, WindowOptions, create_window, run_context};
 
 const DEPTH_WIDTH: u16 = 848;
 const DEPTH_HEIGHT: u16 = 480;
@@ -15,110 +16,114 @@ const COLOR_WIDTH: u16 = 1280;
 const COLOR_HEIGHT: u16 = 720;
 const FPS: u8 = 15;
 
-fn main() {
-    // Run the user task in the show-image context
-    run_context(user_task);
+#[derive(Parser, Debug)]
+struct Args {
+    #[arg(long, default_value_t = 0)]
+    device_index: usize,
+
+    #[arg(long, default_value_t = DEPTH_WIDTH)]
+    depth_width: u16,
+    #[arg(long, default_value_t = DEPTH_HEIGHT)]
+    depth_height: u16,
+
+    #[arg(long, default_value_t = COLOR_WIDTH)]
+    color_width: u16,
+    #[arg(long, default_value_t = COLOR_HEIGHT)]
+    color_height: u16,
+
+    #[arg(long, default_value_t = FPS)]
+    fps: u8,
 }
 
-/// User task to run in the show-image context
-fn user_task() {
+fn main() -> anyhow::Result<()> {
+    let args = Args::parse();
+
+    // Don't create a ./Log directory in the current working directory
+    Logger::set_directory(LogSeverity::Off, None)?;
+
     // Create context and get device list
-    let context = Context::new().unwrap();
-    let devices = context.query_device_list().unwrap();
+    let context = Context::new()?;
+
+    let _logger_handle = Logger::set_callback(LogSeverity::Warn, |_severity, message| {
+        println!("[orbbec]{message}");
+    })?;
+
+    let devices = context.query_device_list()?;
 
     if devices.is_empty() {
-        eprintln!("No Orbbec devices found.");
-        return;
+        anyhow::bail!("no Orbbec devices found");
     }
 
-    // Get the first device available
-    let mut device = devices.get(0).unwrap();
+    let mut device = devices.get(args.device_index)?;
 
-    // Load the "High Accuracy" preset
-    device.load_preset("High Accuracy").unwrap();
+    // Load the "High Accuracy" preset (if it's supported)
+    if let Err(err) = device.load_preset("High Accuracy") {
+        eprintln!("Failed to load preset (may not be supported on this device): {err}");
+    }
 
     // Enable depth noise filter
     let hw_noise = DeviceProperty::HWNoiseRemoveFilterEnable(true);
-    if device
-        .is_property_supported(hw_noise, PermissionType::Write)
-        .unwrap()
-    {
+    if device.is_property_supported(hw_noise, PermissionType::Write)? {
         // HW filter is supported, use it instead of SW filter
-        device.set_property(hw_noise).unwrap();
-        device
-            .set_property(DeviceProperty::HWNoiseRemoveFilterThreshold(0.2))
-            .unwrap();
-        device
-            .set_property(DeviceProperty::DepthNoiseRemovalFilter(false))
-            .unwrap();
+        device.set_property(hw_noise)?;
+        device.set_property(DeviceProperty::HWNoiseRemoveFilterThreshold(0.2))?;
+        device.set_property(DeviceProperty::DepthNoiseRemovalFilter(false))?;
         println!("Using HW depth noise filter.");
     } else {
         // HW filter not supported, use SW filter
-        device
-            .set_property(DeviceProperty::DepthNoiseRemovalFilter(true))
-            .unwrap();
-        device
-            .set_property(DeviceProperty::DepthNoiseRemovalFilterMaxDiff(256))
-            .unwrap();
-        device
-            .set_property(DeviceProperty::DepthNoiseRemovalFilterMaxSpeckleSize(80))
-            .unwrap();
+        device.set_property(DeviceProperty::DepthNoiseRemovalFilter(true))?;
+        device.set_property(DeviceProperty::DepthNoiseRemovalFilterMaxDiff(256))?;
+        device.set_property(DeviceProperty::DepthNoiseRemovalFilterMaxSpeckleSize(80))?;
         println!("Using SW depth noise filter.");
     }
 
     // Create pipeline
-    let mut config = Config::new().unwrap();
-    let mut pipeline = Pipeline::new(&device).unwrap();
+    let mut config = Config::new()?;
+    let mut pipeline = Pipeline::new(&device)?;
 
     // Get depth stream profile
-    let depth_profiles = pipeline.get_stream_profiles(SensorType::Depth).unwrap();
-    let depth_profile = depth_profiles
-        .get_video_stream_profile(DEPTH_WIDTH, DEPTH_HEIGHT, Format::Y16, FPS)
-        .unwrap();
+    let depth_profiles = pipeline.get_stream_profiles(SensorType::Depth)?;
+    let depth_profile = utils::get_video_stream_profile(
+        &depth_profiles,
+        args.depth_width,
+        args.depth_height,
+        Format::Y16,
+        args.fps,
+    )?;
 
     // Get color stream profile
-    let color_profiles = pipeline.get_stream_profiles(SensorType::Color).unwrap();
-    let color_profile = color_profiles
-        .get_video_stream_profile(COLOR_WIDTH, COLOR_HEIGHT, Format::MJPG, FPS)
-        .unwrap();
+    let color_profiles = pipeline.get_stream_profiles(SensorType::Color)?;
+    let color_profile = utils::get_video_stream_profile(
+        &color_profiles,
+        args.color_width,
+        args.color_height,
+        Format::MJPG,
+        args.fps,
+    )?;
 
     // Enable depth and color streams
-    config.enable_stream_with_profile(&depth_profile).unwrap();
-    config.enable_stream_with_profile(&color_profile).unwrap();
+    config.enable_stream_with_profile(&depth_profile)?;
+    config.enable_stream_with_profile(&color_profile)?;
 
     // Create align filter and set to align to color stream
-    let mut align_filter = AlignFilter::new().unwrap();
-    align_filter
-        .set_align_to_stream_profile(&color_profile)
-        .unwrap();
+    let mut align_filter = AlignFilter::new()?;
+    align_filter.set_align_to_stream_profile(&color_profile)?;
 
     // Create format conversion filter to convert MJPG to RGB
-    let mut convert_filter = FormatConvertFilter::new().unwrap();
-    convert_filter
-        .set_convert_type(ConvertType::MJPGToRGB)
-        .unwrap();
+    let mut convert_filter = FormatConvertFilter::new()?;
+    convert_filter.set_convert_type(ConvertType::MJPGToRGB)?;
 
     // Enable sync mode
-    pipeline.set_frame_sync(true).unwrap();
+    pipeline.set_frame_sync(true)?;
 
     // Start streaming
-    pipeline.start(&config).unwrap();
+    pipeline.start(&config)?;
 
-    // Create window to display color + depth image
-    let window_config = WindowOptions {
-        preserve_aspect_ratio: true,
-        default_controls: false,
-        ..Default::default()
-    };
-    let window =
-        create_window("Color + Depth", window_config.clone()).expect("Failed to create window");
+    let rr = rerun::RecordingStreamBuilder::new("orbbec_sdk_rs_depth_aligned").connect_grpc()?;
 
     loop {
         // Get frameset
-        let frameset = match pipeline
-            .wait_for_frames(Duration::from_millis(100))
-            .unwrap()
-        {
+        let frameset = match pipeline.wait_for_frames(Duration::from_millis(100))? {
             Some(frameset) => frameset,
             None => {
                 eprintln!("Timeout waiting for frames.");
@@ -127,46 +132,44 @@ fn user_task() {
         };
 
         // Get color frame
-        let color_frame = frameset.get_color_frame().unwrap();
-        let color_frame = match color_frame {
-            Some(frame) => frame,
-            None => {
-                eprintln!("No color frame found.");
-                continue;
-            }
+        let Some(color_frame) = frameset.get_color_frame()? else {
+            eprintln!("No color frame found.");
+            continue;
         };
 
-        // Convert color frame from MJPG to RGB
-        let color_frame = convert_filter.process(&color_frame).unwrap();
-        let color_data = color_frame.raw_data();
+        // Example usage: convert color frame from MJPG to RGB
+        // We don't use the converted frame since we use the JPEG data directly
+        let color_frame_converted = convert_filter.process(&color_frame)?;
+        let _color_data = color_frame_converted.raw_data();
 
         // Get depth frame
-        let depth_frame = frameset.get_depth_frame().unwrap();
-        let depth_frame = match depth_frame {
-            Some(frame) => frame,
-            None => {
-                eprintln!("No depth frame found.");
-                continue;
-            }
+        let Some(depth_frame) = frameset.get_depth_frame()? else {
+            eprintln!("No depth frame found.");
+            continue;
         };
 
         // Align depth frame to color frame
-        let depth_frame = align_filter.process(&depth_frame).unwrap();
-
-        // Get raw depth data
+        let depth_frame = align_filter.process(&depth_frame)?;
         let depth_data = depth_frame.raw_data();
 
-        // Convert depth to color image
-        let depth_image = utils::depth2image(depth_data).unwrap();
-
-        // Add color and depth images together
-        let added_image = utils::add_images(&depth_image, color_data);
-
-        // Display the combined image
-        let image = ImageView::new(
-            ImageInfo::rgb8(depth_frame.width() as u32, depth_frame.height() as u32),
-            &added_image,
+        rr.set_time(
+            "camera_clock",
+            std::time::Duration::from_micros(color_frame.timestamp_us()),
         );
-        window.set_image("Color + Depth", image).unwrap();
+
+        rr.log(
+            "orbbec/color_frame",
+            &rerun::EncodedImage::from_file_contents(color_frame.raw_data().to_owned())
+                .with_media_type("image/jpeg"),
+        )?;
+
+        rr.log(
+            "orbbec/depth_frame",
+            &rerun::DepthImage::from_gray16(
+                depth_data,
+                [depth_frame.width() as u32, depth_frame.height() as u32],
+            )
+            .with_meter(1000.0 / depth_frame.depth_scale()),
+        )?;
     }
 }

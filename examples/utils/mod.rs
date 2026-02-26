@@ -1,7 +1,12 @@
 //! Utility functions for examples
 #![allow(dead_code)]
 
+use anyhow::Context;
 use colorous::TURBO;
+use orbbec_sdk::{
+    Format,
+    stream::{StreamProfileList, VideoStreamProfile},
+};
 
 /// Convert depth data to a color image for visualization
 pub fn depth2image(depth: &[u8]) -> Option<Vec<u8>> {
@@ -45,4 +50,51 @@ pub fn add_images(img1: &[u8], img2: &[u8]) -> Vec<u8> {
         .zip(img2.iter())
         .map(|(&a, &b)| (a / 2) + (b / 2))
         .collect::<Vec<u8>>()
+}
+
+pub fn get_video_stream_profile(
+    profiles: &StreamProfileList,
+    width: u16,
+    height: u16,
+    format: Format,
+    fps: u8,
+) -> anyhow::Result<VideoStreamProfile> {
+    profiles.get_video_stream_profile(width, height, format, fps).with_context(|| 
+        anyhow::anyhow!(
+            "Requested video stream profile {}x{} @ {}fps ({:?}) is not supported. Available video stream profiles:\n{}",
+            width,
+            height,
+            fps,
+            format,
+            describe_video_profiles(profiles)
+        )
+    )
+}
+
+pub fn describe_video_profiles(profiles: &StreamProfileList) -> String {
+    let mut entries = Vec::new();
+
+    for profile in profiles {
+        match profile {
+            Ok(profile) => {
+                let format = profile
+                    .format()
+                    .map(|format| format!("{format:?}"))
+                    .unwrap_or_else(|_| "Unknown".to_string());
+                entries.push(format!(
+                    "{}x{} @ {}fps ({format})",
+                    profile.width(),
+                    profile.height(),
+                    profile.fps()
+                ));
+            }
+            Err(err) => entries.push(format!("<error reading profile: {err}>")),
+        }
+    }
+
+    if entries.is_empty() {
+        "none reported".to_string()
+    } else {
+        entries.join("\n")
+    }
 }

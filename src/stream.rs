@@ -59,6 +59,35 @@ impl VideoStreamProfile {
             .map(|intrinsic| intrinsic.into())
             .map_err(OrbbecError::from)
     }
+
+    /// Get the width of this video stream profile in pixels
+    pub fn width(&self) -> u32 {
+        self.inner
+            .get_video_width()
+            .map_err(OrbbecError::from)
+            .unwrap()
+    }
+
+    /// Get the height of this video stream profile in pixels
+    pub fn height(&self) -> u32 {
+        self.inner
+            .get_video_height()
+            .map_err(OrbbecError::from)
+            .unwrap()
+    }
+
+    /// Get the frame rate of this video stream profile
+    pub fn fps(&self) -> u32 {
+        self.inner
+            .get_video_fps()
+            .map_err(OrbbecError::from)
+            .unwrap()
+    }
+
+    /// Get the pixel format of this stream profile
+    pub fn format(&self) -> Result<Format, OrbbecError> {
+        self.inner.get_format().map_err(OrbbecError::from)
+    }
 }
 
 impl AsRef<OBStreamProfile> for VideoStreamProfile {

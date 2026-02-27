@@ -6,6 +6,7 @@ pub mod device;
 pub mod enums;
 pub mod filter;
 pub mod frame;
+pub mod logger;
 pub mod pipeline;
 pub mod stream;
 

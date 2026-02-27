@@ -142,6 +142,49 @@ impl From<orb::OBFormat> for OBFormat {
     }
 }
 
+/// Log severity.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum OBLogSeverity {
+    /// Debug.
+    Debug = orb::OBLogSeverity_OB_LOG_SEVERITY_DEBUG as isize,
+    /// Information.
+    Info = orb::OBLogSeverity_OB_LOG_SEVERITY_INFO as isize,
+    /// Warning.
+    Warn = orb::OBLogSeverity_OB_LOG_SEVERITY_WARN as isize,
+    /// Error.
+    Error = orb::OBLogSeverity_OB_LOG_SEVERITY_ERROR as isize,
+    /// Fatal error.
+    Fatal = orb::OBLogSeverity_OB_LOG_SEVERITY_FATAL as isize,
+    /// Off (disable logging).
+    Off = orb::OBLogSeverity_OB_LOG_SEVERITY_OFF as isize,
+}
+
+impl Ord for OBLogSeverity {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        (*self as isize).cmp(&(*other as isize))
+    }
+}
+
+impl PartialOrd for OBLogSeverity {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl From<orb::OBLogSeverity> for OBLogSeverity {
+    fn from(severity: orb::OBLogSeverity) -> Self {
+        match severity {
+            orb::OBLogSeverity_OB_LOG_SEVERITY_DEBUG => OBLogSeverity::Debug,
+            orb::OBLogSeverity_OB_LOG_SEVERITY_INFO => OBLogSeverity::Info,
+            orb::OBLogSeverity_OB_LOG_SEVERITY_WARN => OBLogSeverity::Warn,
+            orb::OBLogSeverity_OB_LOG_SEVERITY_ERROR => OBLogSeverity::Error,
+            orb::OBLogSeverity_OB_LOG_SEVERITY_FATAL => OBLogSeverity::Fatal,
+            orb::OBLogSeverity_OB_LOG_SEVERITY_OFF => OBLogSeverity::Off,
+            _ => OBLogSeverity::Off,
+        }
+    }
+}
+
 /// Property ID
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum OBPropertyID {

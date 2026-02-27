@@ -5,6 +5,7 @@ pub mod context;
 pub mod device;
 pub mod filter;
 pub mod frame;
+pub mod logger;
 pub mod pipeline;
 pub mod stream;
 

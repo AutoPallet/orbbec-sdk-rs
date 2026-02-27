@@ -5,6 +5,7 @@ pub mod device;
 pub mod error;
 pub mod filter;
 pub mod frame;
+pub mod logger;
 pub mod pipeline;
 pub mod stream;
 pub(crate) mod sys;
@@ -44,6 +45,9 @@ pub use crate::sys::orb::OBAlignMode as AlignMode;
 
 #[doc(inline)]
 pub use crate::sys::orb::OBFrameAggregateOutputMode as FrameAggregateOutputMode;
+
+#[doc(inline)]
+pub use crate::sys::orb::OBDeviceLogSeverityLevel as LogSeverity;
 
 /// There can only be a single context at a time
 /// C API does not enforce this, but having multiple contexts

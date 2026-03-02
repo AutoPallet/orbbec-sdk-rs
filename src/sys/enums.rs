@@ -142,6 +142,48 @@ impl From<orb::OBFormat> for OBFormat {
     }
 }
 
+/// Camera distortion model
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum OBCameraDistortionModel {
+    /// Rectilinear images. No distortion compensation required.
+    None = orb::OBCameraDistortionModel_OB_DISTORTION_NONE as isize,
+    /// Equivalent to Brown-Conrady distortion, except that tangential distortion is applied to radially distorted points
+    ModifiedBrownConrady =
+        orb::OBCameraDistortionModel_OB_DISTORTION_MODIFIED_BROWN_CONRADY as isize,
+    /// Equivalent to Brown-Conrady distortion, except undistorts image instead of distorting it
+    InverseBrownConrady = orb::OBCameraDistortionModel_OB_DISTORTION_INVERSE_BROWN_CONRADY as isize,
+    /// Unmodified Brown-Conrady distortion model
+    BrownConrady = orb::OBCameraDistortionModel_OB_DISTORTION_BROWN_CONRADY as isize,
+    /// Unmodified Brown-Conrady distortion model with k6 supported
+    BrownConradyK6 = orb::OBCameraDistortionModel_OB_DISTORTION_BROWN_CONRADY_K6 as isize,
+    /// Kannala-Brandt distortion model
+    KannalaBrandt4 = orb::OBCameraDistortionModel_OB_DISTORTION_KANNALA_BRANDT4 as isize,
+}
+
+impl From<orb::OBCameraDistortionModel> for OBCameraDistortionModel {
+    fn from(model: orb::OBCameraDistortionModel) -> Self {
+        match model {
+            orb::OBCameraDistortionModel_OB_DISTORTION_NONE => OBCameraDistortionModel::None,
+            orb::OBCameraDistortionModel_OB_DISTORTION_MODIFIED_BROWN_CONRADY => {
+                OBCameraDistortionModel::ModifiedBrownConrady
+            }
+            orb::OBCameraDistortionModel_OB_DISTORTION_INVERSE_BROWN_CONRADY => {
+                OBCameraDistortionModel::InverseBrownConrady
+            }
+            orb::OBCameraDistortionModel_OB_DISTORTION_BROWN_CONRADY => {
+                OBCameraDistortionModel::BrownConrady
+            }
+            orb::OBCameraDistortionModel_OB_DISTORTION_BROWN_CONRADY_K6 => {
+                OBCameraDistortionModel::BrownConradyK6
+            }
+            orb::OBCameraDistortionModel_OB_DISTORTION_KANNALA_BRANDT4 => {
+                OBCameraDistortionModel::KannalaBrandt4
+            }
+            _ => OBCameraDistortionModel::None,
+        }
+    }
+}
+
 /// Log severity.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum OBLogSeverity {

@@ -1,7 +1,8 @@
 //! Pipeline configuration and management
 use std::os::raw::c_void;
 
-use crate::sys::enums::OBFrameAggregateOutputMode;
+use crate::sys::enums::{OBCameraDistortionModel, OBFrameAggregateOutputMode};
+use crate::sys::stream::OBCameraIntrinsic;
 
 use super::device::OBDevice;
 use super::enums::{OBAlignMode, OBSensorType};
@@ -75,6 +76,113 @@ impl OBConfig {
         };
 
         OBError::consume(err_ptr)
+    }
+}
+
+/// Camera distortion
+pub struct OBCameraDistortion {
+    inner: orb::ob_camera_distortion,
+}
+
+impl OBCameraDistortion {
+    pub fn k1(&self) -> f32 {
+        self.inner.k1
+    }
+
+    pub fn k2(&self) -> f32 {
+        self.inner.k2
+    }
+
+    pub fn k3(&self) -> f32 {
+        self.inner.k3
+    }
+
+    pub fn k4(&self) -> f32 {
+        self.inner.k4
+    }
+
+    pub fn k5(&self) -> f32 {
+        self.inner.k5
+    }
+
+    pub fn k6(&self) -> f32 {
+        self.inner.k6
+    }
+
+    pub fn p1(&self) -> f32 {
+        self.inner.p1
+    }
+
+    pub fn p2(&self) -> f32 {
+        self.inner.p2
+    }
+
+    pub fn model(&self) -> OBCameraDistortionModel {
+        OBCameraDistortionModel::from(self.inner.model)
+    }
+}
+
+impl From<orb::ob_camera_distortion> for OBCameraDistortion {
+    fn from(inner: orb::ob_camera_distortion) -> Self {
+        OBCameraDistortion { inner }
+    }
+}
+
+/// D2C transform
+pub struct OBD2CTransform {
+    inner: orb::ob_d2c_transform,
+}
+
+impl OBD2CTransform {
+    pub fn rot(&self) -> [f32; 9] {
+        self.inner.rot
+    }
+
+    pub fn trans(&self) -> [f32; 3] {
+        self.inner.trans
+    }
+}
+
+impl From<orb::ob_d2c_transform> for OBD2CTransform {
+    fn from(inner: orb::ob_d2c_transform) -> Self {
+        OBD2CTransform { inner }
+    }
+}
+
+/// Camera parameters
+pub struct OBCameraParam {
+    inner: orb::ob_camera_param,
+}
+
+impl OBCameraParam {
+    pub fn depth_intrinsic(&self) -> OBCameraIntrinsic {
+        OBCameraIntrinsic::from(self.inner.depthIntrinsic)
+    }
+
+    pub fn color_intrinsic(&self) -> OBCameraIntrinsic {
+        OBCameraIntrinsic::from(self.inner.rgbIntrinsic)
+    }
+
+    pub fn depth_distortion(&self) -> OBCameraDistortion {
+        OBCameraDistortion::from(self.inner.depthDistortion)
+    }
+
+    pub fn color_distortion(&self) -> OBCameraDistortion {
+        OBCameraDistortion::from(self.inner.rgbDistortion)
+    }
+
+    pub fn transform(&self) -> OBD2CTransform {
+        OBD2CTransform::from(self.inner.transform)
+    }
+
+    pub fn is_mirrored(&self) -> bool {
+        self.inner.isMirrored
+    }
+}
+
+impl From<orb::ob_camera_param> for OBCameraParam {
+    fn from(inner: orb::ob_camera_param) -> Self {
+        OBCameraParam { inner }
     }
 }
 
@@ -155,6 +263,16 @@ impl OBPipeline {
         OBError::consume(err_ptr)?;
 
         Ok(OBStreamProfileList::new(profile_list))
+    }
+
+    pub fn get_camera_param(&self) -> Result<OBCameraParam, OBError> {
+        let mut err_ptr = std::ptr::null_mut();
+
+        let camera_param = unsafe { orb::ob_pipeline_get_camera_param(self.inner, &mut err_ptr) };
+
+        OBError::consume(err_ptr)?;
+
+        Ok(OBCameraParam::from(camera_param))
     }
 
     /// Enable frame synchronization

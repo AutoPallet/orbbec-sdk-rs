@@ -1,49 +1,6 @@
 //! Stream profiles and related operations
 use super::{OBError, call_ob_function, drop_ob_object, impl_ob_method, orb};
-use crate::sys::orb::OBFormat;
-
-/// Camera intrinsic parameters
-pub struct OBCameraIntrinsic {
-    inner: orb::OBCameraIntrinsic,
-}
-
-impl OBCameraIntrinsic {
-    /// Focal length in pixels along X axis
-    pub fn fx(&self) -> f32 {
-        self.inner.fx
-    }
-
-    /// Focal length in pixels along Y axis
-    pub fn fy(&self) -> f32 {
-        self.inner.fy
-    }
-
-    /// Optical center abscissa
-    pub fn cx(&self) -> f32 {
-        self.inner.cx
-    }
-
-    /// Optical center ordinate
-    pub fn cy(&self) -> f32 {
-        self.inner.cy
-    }
-
-    /// Image width in pixels
-    pub fn width(&self) -> i16 {
-        self.inner.width
-    }
-
-    /// Image height in pixels
-    pub fn height(&self) -> i16 {
-        self.inner.height
-    }
-}
-
-impl From<orb::OBCameraIntrinsic> for OBCameraIntrinsic {
-    fn from(intrinsic: orb::OBCameraIntrinsic) -> Self {
-        OBCameraIntrinsic { inner: intrinsic }
-    }
-}
+use crate::sys::orb::{OBCameraIntrinsic, OBFormat};
 
 /// Stream profile
 pub struct OBStreamProfile {
@@ -61,11 +18,11 @@ impl OBStreamProfile {
         self.inner
     }
 
-    /// Get video stream profile intrinsic
-    pub fn get_video_intrinsic(&self) -> Result<OBCameraIntrinsic, OBError> {
-        let intrinsics = call_ob_function!(orb::ob_video_stream_profile_get_intrinsic, self.inner)?;
-        Ok(OBCameraIntrinsic::from(intrinsics))
-    }
+    impl_ob_method!(
+        /// Get video stream profile intrinsic
+        get_video_intrinsic => OBCameraIntrinsic,
+        orb::ob_video_stream_profile_get_intrinsic,
+    );
 
     impl_ob_method!(
         /// Get stream profile format

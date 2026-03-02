@@ -1,5 +1,5 @@
 //! Pipeline configuration and management
-use crate::sys::orb::{OBAlignMode, OBFrameAggregateOutputMode, OBSensorType};
+use crate::sys::orb::{OBAlignMode, OBCameraParam, OBFrameAggregateOutputMode, OBSensorType};
 
 use super::device::OBDevice;
 use super::frame::OBFrame;
@@ -110,6 +110,12 @@ impl OBPipeline {
         /// Enable frame synchronization
         enable_frame_sync => (),
         orb::ob_pipeline_enable_frame_sync,
+    );
+
+    impl_ob_method!(
+        /// Get the camera parameters for the pipeline
+        get_camera_param => OBCameraParam,
+        orb::ob_pipeline_get_camera_param,
     );
 
     impl_ob_method!(

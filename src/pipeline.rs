@@ -6,7 +6,10 @@ use crate::{
     device::Device,
     frame::FrameSet,
     stream::{StreamProfile, StreamProfileList, VideoStreamProfile},
-    sys::pipeline::{OBConfig, OBPipeline, frameset_trampoline},
+    sys::{
+        orb::OBCameraParam,
+        pipeline::{OBConfig, OBPipeline, frameset_trampoline},
+    },
 };
 
 /// Pipeline Configuration
@@ -131,6 +134,13 @@ impl Pipeline {
             .map_err(crate::error::OrbbecError::from)?;
 
         Ok(profile_list)
+    }
+
+    /// Get the camera parameters for the pipeline
+    pub fn get_camera_param(&mut self) -> Result<OBCameraParam, crate::error::OrbbecError> {
+        self.inner
+            .get_camera_param()
+            .map_err(crate::error::OrbbecError::from)
     }
 
     /// Start the pipeline with the given configuration

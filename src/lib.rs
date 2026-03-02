@@ -14,6 +14,8 @@ use std::sync::atomic::AtomicBool;
 
 use sys::context::OBContext;
 
+pub use crate::sys::prop;
+
 #[doc(inline)]
 pub use crate::sys::orb::OBDeviceType as DeviceType;
 
@@ -38,10 +40,11 @@ pub use crate::sys::orb::OBConvertFormat as ConvertType;
 #[doc(inline)]
 pub use crate::sys::orb::OBCoordinateSystemType as CoordinateSystem;
 
-pub use crate::sys::prop;
-
 #[doc(inline)]
 pub use crate::sys::orb::OBAlignMode as AlignMode;
+
+#[doc(inline)]
+pub use crate::sys::orb::OBCameraIntrinsic as CameraIntrinsic;
 
 #[doc(inline)]
 pub use crate::sys::orb::OBFrameAggregateOutputMode as FrameAggregateOutputMode;

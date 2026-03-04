@@ -2,10 +2,10 @@
 use std::time::Duration;
 
 use crate::{
-    SensorType,
+    AlignMode, FrameAggregateOutputMode, SensorType,
     device::Device,
     frame::FrameSet,
-    stream::{StreamProfile, StreamProfileList},
+    stream::{StreamProfile, StreamProfileList, VideoStreamProfile},
     sys::pipeline::{OBConfig, OBPipeline},
 };
 
@@ -31,6 +31,39 @@ impl Config {
     ) -> Result<(), crate::error::OrbbecError> {
         self.inner
             .enable_stream_with_profile(profile.as_ref())
+            .map_err(crate::error::OrbbecError::from)
+    }
+
+    /// Set the alignment mode for the pipeline configuration
+    /// ### Arguments
+    /// * `mode` - Alignment mode to set
+    pub fn set_align_mode(&mut self, mode: AlignMode) -> Result<(), crate::error::OrbbecError> {
+        self.inner
+            .set_align_mode(mode)
+            .map_err(crate::error::OrbbecError::from)
+    }
+
+    /// Set whether depth scaling is required after enable depth to color alignment
+    /// ### Arguments
+    /// * `enable` - `true` to enable depth scaling, `false` to disable it
+    pub fn set_depth_scale_after_align_require(
+        &mut self,
+        enable: bool,
+    ) -> Result<(), crate::error::OrbbecError> {
+        self.inner
+            .set_depth_scale_after_align_require(enable)
+            .map_err(crate::error::OrbbecError::from)
+    }
+
+    /// Set the frame aggregation output mode for the pipeline configuration
+    /// ### Arguments
+    /// * `mode` - Frame aggregation output mode to set
+    pub fn set_frame_aggregate_output_mode(
+        &mut self,
+        mode: FrameAggregateOutputMode,
+    ) -> Result<(), crate::error::OrbbecError> {
+        self.inner
+            .set_frame_aggregate_output_mode(mode)
             .map_err(crate::error::OrbbecError::from)
     }
 }
@@ -70,6 +103,24 @@ impl Pipeline {
         let profile_list = self
             .inner
             .get_stream_profile_list(sensor)
+            .map(StreamProfileList::new)
+            .map_err(crate::error::OrbbecError::from)?;
+
+        Ok(profile_list)
+    }
+
+    /// Get the list of D2C-enabled depth sensor resolutions corresponding to the input color sensor resolution
+    /// ### Arguments
+    /// * `color_profile` - Color sensor profile
+    /// * `align_mode` - Depth alignment mode
+    pub fn get_d2c_depth_profiles(
+        &mut self,
+        color_profile: &VideoStreamProfile,
+        align_mode: AlignMode,
+    ) -> Result<StreamProfileList, crate::error::OrbbecError> {
+        let profile_list = self
+            .inner
+            .get_d2c_depth_profile_list(color_profile.as_ref(), align_mode)
             .map(StreamProfileList::new)
             .map_err(crate::error::OrbbecError::from)?;
 

@@ -1,5 +1,5 @@
 //! Pipeline configuration and management
-use crate::sys::orb::OBSensorType;
+use crate::sys::orb::{OBAlignMode, OBFrameAggregateOutputMode, OBSensorType};
 
 use super::device::OBDevice;
 use super::frame::OBFrame;
@@ -28,6 +28,27 @@ impl OBConfig {
             profile.inner()
         )
     }
+
+    impl_ob_method!(
+        /// Set the alignment mode for the pipeline configuration
+        set_align_mode => (),
+        orb::ob_config_set_align_mode,
+        mode: OBAlignMode,
+    );
+
+    impl_ob_method!(
+        /// Set whether depth scaling is required after enable depth to color alignment
+        set_depth_scale_after_align_require => (),
+        orb::ob_config_set_depth_scale_after_align_require,
+        enable: bool,
+    );
+
+    impl_ob_method!(
+        /// Set the frame aggregation output mode for the pipeline configuration
+        set_frame_aggregate_output_mode => (),
+        orb::ob_config_set_frame_aggregate_output_mode,
+        mode: OBFrameAggregateOutputMode,
+    );
 }
 
 /// Camera pipeline class
@@ -58,6 +79,21 @@ impl OBPipeline {
         Ok(OBStreamProfileList::new(list))
     }
 
+    /// Get the list of D2C-enabled depth sensor resolutions corresponding to the input color sensor resolution
+    pub fn get_d2c_depth_profile_list(
+        &self,
+        color_profile: &OBStreamProfile,
+        align_mode: OBAlignMode,
+    ) -> Result<OBStreamProfileList, OBError> {
+        let profile_list = call_ob_function!(
+            orb::ob_get_d2c_depth_profile_list,
+            self.inner,
+            color_profile.inner(),
+            align_mode
+        )?;
+        Ok(OBStreamProfileList::new(profile_list))
+    }
+
     impl_ob_method!(
         /// Enable frame synchronization
         enable_frame_sync => (),
@@ -78,6 +114,10 @@ impl OBPipeline {
     /// Wait for a set of frames to be returned synchronously
     pub fn wait_for_frameset(&self, timeout_ms: u32) -> Result<Option<OBFrame>, OBError> {
         let frame = call_ob_function!(orb::ob_pipeline_wait_for_frameset, self.inner, timeout_ms)?;
-        Ok(if frame.is_null() { None } else { Some(OBFrame::new(frame)) })
+        Ok(if frame.is_null() {
+            None
+        } else {
+            Some(OBFrame::new(frame))
+        })
     }
 }

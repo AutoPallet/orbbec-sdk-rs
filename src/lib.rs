@@ -39,6 +39,12 @@ pub use crate::sys::orb::OBCoordinateSystemType as CoordinateSystem;
 
 pub use crate::sys::prop;
 
+#[doc(inline)]
+pub use crate::sys::orb::OBAlignMode as AlignMode;
+
+#[doc(inline)]
+pub use crate::sys::orb::OBFrameAggregateOutputMode as FrameAggregateOutputMode;
+
 /// There can only be a single context at a time
 /// C API does not enforce this, but having multiple contexts
 /// will lead to crashes and undefined behavior

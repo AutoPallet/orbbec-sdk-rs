@@ -690,3 +690,31 @@ pub enum OBCoordinateSystem {
     /// Right Handed Coordinate System
     RightHanded = orb::OB_COORDINATE_SYSTEM_TYPE_OB_RIGHT_HAND_COORDINATE_SYSTEM as isize,
 }
+
+/// Align Mode
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum OBAlignMode {
+    /// Turn off alignment
+    Disable = orb::OBAlignMode_ALIGN_DISABLE as isize,
+    /// Hardware D2C alignment mode
+    Hardware = orb::OBAlignMode_ALIGN_D2C_HW_MODE as isize,
+    /// Software D2C alignment mode
+    Software = orb::OBAlignMode_ALIGN_D2C_SW_MODE as isize,
+}
+
+/// Frame Aggregate Output Mode
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum OBFrameAggregateOutputMode {
+    /// Only FrameSet that contains all types of data frames will be output
+    AllTypeFrameRequire =
+        orb::OB_FRAME_AGGREGATE_OUTPUT_MODE_OB_FRAME_AGGREGATE_OUTPUT_ALL_TYPE_FRAME_REQUIRE
+            as isize,
+    /// Color Frame Require output mode
+    ColorFrameRequire =
+        orb::OB_FRAME_AGGREGATE_OUTPUT_MODE_OB_FRAME_AGGREGATE_OUTPUT_COLOR_FRAME_REQUIRE as isize,
+    /// FrameSet for any case will be output
+    AnySituation =
+        orb::OB_FRAME_AGGREGATE_OUTPUT_MODE_OB_FRAME_AGGREGATE_OUTPUT_ANY_SITUATION as isize,
+    /// Disable Frame Aggreate
+    Disable = orb::OB_FRAME_AGGREGATE_OUTPUT_MODE_OB_FRAME_AGGREGATE_OUTPUT_DISABLE as isize,
+}

@@ -133,4 +133,11 @@ impl OBFrame {
         get_points_scale => f32,
         orb::ob_points_frame_get_coordinate_value_scale,
     );
+
+    impl_ob_method!(
+        /// Get the depth frame scale.
+        /// Only valid for depth frames.
+        get_depth_scale => f32,
+        orb::ob_depth_frame_get_value_scale,
+    );
 }

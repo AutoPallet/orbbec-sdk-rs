@@ -88,6 +88,16 @@ pub struct DepthFrame {
 }
 impl_video_frame!(DepthFrame);
 
+impl DepthFrame {
+    /// Get the scale (pixel value * scale = distance in millimeters) of the depth frame
+    pub fn depth_scale(&self) -> f32 {
+        // Unwrap is safe here because internal pointer is guaranteed to be valid and a depth frame
+        // SDK only returns error for this function if pointer is NULL or not a depth frame
+        // Ref: https://github.com/orbbec/OrbbecSDK_v2/blob/815ae047cc977a1f7edd2b97b69ff6cd29f510b3/src/impl/Frame.cpp#L198
+        self.inner.get_depth_scale().unwrap()
+    }
+}
+
 /// Point Cloud frame
 pub struct PointCloudFrame {
     inner: OBFrame,

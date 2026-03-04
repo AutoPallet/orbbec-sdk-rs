@@ -186,4 +186,16 @@ impl OBFrame {
 
         Ok(scale)
     }
+
+    /// Get the depth frame scale.
+    /// Only valid for depth frames.
+    pub fn get_depth_scale(&self) -> Result<f32, OBError> {
+        let mut err_ptr = std::ptr::null_mut();
+
+        let scale = unsafe { orb::ob_depth_frame_get_value_scale(self.inner, &mut err_ptr) };
+
+        OBError::consume(err_ptr)?;
+
+        Ok(scale)
+    }
 }

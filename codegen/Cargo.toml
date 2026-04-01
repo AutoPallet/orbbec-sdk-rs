@@ -1,0 +1,13 @@
+[package]
+name = "codegen"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bindgen = { version = "0.72" }
+convert_case = { version = "0.11" }
+prettyplease = { version = "0.2" }
+proc-macro2 = { version = "1.0" }
+quote = { version = "1.0" }
+regex = { version = "1.11" }
+syn = { version = "2.0" }

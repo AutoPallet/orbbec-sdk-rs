@@ -1,8 +1,8 @@
 //! Filter related operations
 use std::ffi::CStr;
 
-use super::enums::OBFilterConfigValueType;
 use super::frame::OBFrame;
+use super::orb::OBFilterConfigValueType;
 use super::stream::OBStreamProfile;
 use super::{OBError, drop_ob_object, orb};
 

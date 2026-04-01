@@ -106,7 +106,7 @@ impl PointCloudFrame {
         // Ref: https://github.com/orbbec/OrbbecSDK_v2/blob/815ae047cc977a1f7edd2b97b69ff6cd29f510b3/src/impl/Frame.cpp#L147
         let format = self.inner.get_format().unwrap();
 
-        format == Format::RGBPoint
+        format == Format::RgbPoint
     }
 
     /// Get the point cloud coordinate scale

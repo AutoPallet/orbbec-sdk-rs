@@ -121,39 +121,11 @@ fn main() {
     #[cfg(feature = "buildtime-bindgen")]
     {
         let cargo_manifest_dir = std::env::current_dir().unwrap();
-
         let target = std::env::var("TARGET").unwrap();
-
-        // The bindgen::Builder is the main entry point
-        // to bindgen, and lets you build up options for
-        // the resulting bindings.
-        let bindings = bindgen::Builder::default()
-            // The input header we would like to generate
-            // bindings for.
-            .header("OrbbecSDK/include/libobsensor/ObSensor.h")
-            // Tell cargo to invalidate the built crate whenever any of the
-            // included header files changed.
-            .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
-            // Set the include path for the OrbbecSDK headers
-            .clang_arg("-IOrbbecSDK/include/")
-            // Set the target architecture (The committed bindings are for x86_64-unknown-linux-gnu!)
-            .clang_arg(format!("--target={target}"))
-            // Convert enum type
-            .translate_enum_integer_types(true)
-            // Finish the builder and generate the bindings.
-            .generate()
-            // Unwrap the Result and panic on failure.
-            .expect("Unable to generate bindings");
-
-        // Write the bindings to file
-        let bindings_dir = cargo_manifest_dir.join("bindings");
-        let bindings_file = bindings_dir.join("bindings.rs");
-
-        std::fs::create_dir_all(&bindings_dir).expect("Failed to create bindings directory");
-
-        bindings
-            .write_to_file(bindings_file)
-            .expect("Couldn't write bindings!");
+        codegen::generate_properties(codegen::GenerateArgs {
+            bindings_path: cargo_manifest_dir.join("bindings"),
+            target,
+        });
     }
 }
 

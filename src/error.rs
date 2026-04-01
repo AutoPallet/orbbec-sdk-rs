@@ -1,6 +1,6 @@
 //! Error module
 use crate::sys::OBError;
-use crate::sys::enums::OBExceptionType;
+use crate::sys::orb::OBExceptionType;
 
 use std::{error::Error, fmt};
 
@@ -38,6 +38,8 @@ pub enum OrbbecError {
     MemoryException(OrbbecErrorData),
     /// Unsupported operation type error by SDK or device
     UnsupportedOperation(OrbbecErrorData),
+    /// Device access denied
+    AccessDenied(OrbbecErrorData),
 }
 
 impl fmt::Display for OrbbecError {
@@ -61,6 +63,7 @@ impl fmt::Display for OrbbecError {
             OrbbecError::UnsupportedOperation(data) => {
                 write!(f, "Unsupported Operation: {}", data.message)
             }
+            OrbbecError::AccessDenied(data) => write!(f, "Access Denied: {}", data.message),
         }
     }
 }
@@ -84,13 +87,14 @@ impl From<&OBError> for OrbbecError {
             OBExceptionType::Unknown => OrbbecError::Unknown(data),
             OBExceptionType::StdException => OrbbecError::StdException(data),
             OBExceptionType::CameraDisconnected => OrbbecError::CameraDisconnected(data),
-            OBExceptionType::PlatformException => OrbbecError::PlatformException(data),
+            OBExceptionType::Platform => OrbbecError::PlatformException(data),
             OBExceptionType::InvalidValue => OrbbecError::InvalidValue(data),
-            OBExceptionType::WrongAPICallSequence => OrbbecError::WrongAPICallSequence(data),
+            OBExceptionType::WrongApiCallSequence => OrbbecError::WrongAPICallSequence(data),
             OBExceptionType::NotImplemented => OrbbecError::NotImplemented(data),
-            OBExceptionType::IOException => OrbbecError::IOException(data),
-            OBExceptionType::MemoryException => OrbbecError::MemoryException(data),
+            OBExceptionType::Io => OrbbecError::IOException(data),
+            OBExceptionType::Memory => OrbbecError::MemoryException(data),
             OBExceptionType::UnsupportedOperation => OrbbecError::UnsupportedOperation(data),
+            OBExceptionType::AccessDenied => OrbbecError::AccessDenied(data),
         }
     }
 }

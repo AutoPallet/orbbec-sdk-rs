@@ -18,7 +18,7 @@ exclude = [
 
 [build-dependencies]
 cmake = "0.1"
-bindgen = { version = "0.72", optional = true }
+codegen = { path = "codegen", optional = true }
 
 [dev-dependencies]
 colorous = "1.0.16"
@@ -28,7 +28,7 @@ nalgebra = "0.30"
 
 [features]
 default = []
-buildtime-bindgen = ["bindgen"]
+buildtime-bindgen = ["codegen"]
 docs-only = []
 
 [package.metadata.docs.rs]

@@ -14,28 +14,30 @@ use std::sync::atomic::AtomicBool;
 use sys::context::OBContext;
 
 #[doc(inline)]
-pub use crate::sys::enums::OBDeviceType as DeviceType;
+pub use crate::sys::orb::OBDeviceType as DeviceType;
 
 #[doc(inline)]
-pub use crate::sys::enums::OBFormat as Format;
+pub use crate::sys::orb::OBFormat as Format;
 
 #[doc(inline)]
-pub use crate::sys::enums::OBSensorType as SensorType;
+pub use crate::sys::orb::OBSensorType as SensorType;
 
 #[doc(inline)]
-pub use crate::sys::enums::OBStreamType as StreamType;
+pub use crate::sys::orb::OBStreamType as StreamType;
 
 #[doc(inline)]
-pub use crate::sys::enums::OBPermissionType as PermissionType;
+pub use crate::sys::orb::OBPermissionType as PermissionType;
 
 #[doc(inline)]
-pub use crate::sys::enums::OBHoleFillMode as HoleFillMode;
+pub use crate::sys::orb::OBHoleFillingMode as HoleFillMode;
 
 #[doc(inline)]
-pub use crate::sys::enums::OBConvertFormat as ConvertType;
+pub use crate::sys::orb::OBConvertFormat as ConvertType;
 
 #[doc(inline)]
-pub use crate::sys::enums::OBCoordinateSystem as CoordinateSystem;
+pub use crate::sys::orb::OBCoordinateSystemType as CoordinateSystem;
+
+pub use crate::sys::prop;
 
 /// There can only be a single context at a time
 /// C API does not enforce this, but having multiple contexts

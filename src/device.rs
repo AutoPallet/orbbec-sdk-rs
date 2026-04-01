@@ -1,13 +1,9 @@
 //! Device module
-mod device_property;
 use std::fmt;
 
-use crate::device::device_property::PropertyValue;
 use crate::error::{OrbbecError, OrbbecErrorData};
+use crate::sys::prop::{GetProperty, Property, SetProperty};
 use crate::{Context, DeviceType, PermissionType, sys};
-
-#[doc(inline)]
-pub use device_property::DeviceProperty;
 
 /// Device information
 pub struct DeviceInfo {
@@ -147,7 +143,7 @@ impl fmt::Debug for DeviceInfo {
 
 /// A single Orbbec device
 pub struct Device {
-    inner: sys::device::OBDevice,
+    pub(crate) inner: sys::device::OBDevice,
 }
 
 impl Device {
@@ -183,73 +179,46 @@ impl Device {
         self.inner.load_preset(&cstr).map_err(OrbbecError::from)
     }
 
-    /// Check if a device property is supported
+    /// Check if a device property is supported.
+    ///
+    /// ### Type Parameters
+    /// * `P` - The struct implementing [`Property`] to check (e.g., `DepthAlignHardware`).
+    ///
     /// ### Arguments
-    /// * `property_id` - The property to check
-    /// * `permission` - The permission type to check (read, write, or read/write)
-    pub fn is_property_supported(
+    /// * `permission` - The permission type to check (read, write, or read/write).
+    ///
+    /// ### Returns
+    /// Returns `Ok(true)` if supported, `Ok(false)` otherwise, or an [`OrbbecError`].
+    pub fn is_property_supported<P: Property>(
         &self,
-        property: DeviceProperty,
         permission: PermissionType,
     ) -> Result<bool, OrbbecError> {
-        let mut property = property;
-        let (prop_id, _) = property.decompose();
-
         self.inner
-            .is_property_supported(prop_id, permission)
+            .is_property_supported(P::ID, permission)
             .map_err(OrbbecError::from)
     }
 
     /// Set a property value on the device
+    ///
+    /// ### Type Parameters
+    /// * `P` - The struct implementing [`SetProperty`] to set (e.g., `DepthAlignHardware`).
+    ///
     /// ### Arguments
     /// * `property` - The property to set and its value
-    pub fn set_property(&mut self, property: DeviceProperty) -> Result<(), OrbbecError> {
-        let mut property = property;
-        let (prop_id, prop_type) = property.decompose();
-
-        match prop_type {
-            PropertyValue::Bool(value) => self
-                .inner
-                .set_bool_property(prop_id, *value)
-                .map_err(OrbbecError::from),
-            PropertyValue::Int(value) => self
-                .inner
-                .set_int_property(prop_id, *value)
-                .map_err(OrbbecError::from),
-            PropertyValue::Float(value) => self
-                .inner
-                .set_float_property(prop_id, *value)
-                .map_err(OrbbecError::from),
-        }
+    pub fn set_property<P: SetProperty>(&mut self, value: P::Value) -> Result<(), OrbbecError> {
+        P::set_on(self, value)
     }
 
     /// Get a property value from the device
-    /// ### Arguments
+    ///
+    /// ### Type Parameters
+    /// * `P` - The struct implementing [`GetProperty`] to get (e.g., `DepthAlignHardware`).
+    ///
+    /// ### Returns
+    /// Returns the property value, or an [`OrbbecError`].
     /// * `property` - The property to get
-    pub fn get_property(&self, property: &mut DeviceProperty) -> Result<(), OrbbecError> {
-        let (prop_id, prop_type) = property.decompose();
-
-        match prop_type {
-            PropertyValue::Bool(value) => {
-                *value = self
-                    .inner
-                    .get_bool_property(prop_id)
-                    .map_err(OrbbecError::from)?;
-            }
-            PropertyValue::Int(value) => {
-                *value = self
-                    .inner
-                    .get_int_property(prop_id)
-                    .map_err(OrbbecError::from)?;
-            }
-            PropertyValue::Float(value) => {
-                *value = self
-                    .inner
-                    .get_float_property(prop_id)
-                    .map_err(OrbbecError::from)?;
-            }
-        }
-        Ok(())
+    pub fn get_property<P: GetProperty>(&self) -> Result<P::Value, OrbbecError> {
+        P::get_from(self)
     }
 }
 

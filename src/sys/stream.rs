@@ -1,6 +1,6 @@
 //! Stream profiles and related operations
-use super::enums::OBFormat;
 use super::{OBError, drop_ob_object, orb};
+use crate::sys::orb::OBFormat;
 
 /// Camera intrinsic parameters
 pub struct OBCameraIntrinsic {
@@ -123,7 +123,7 @@ impl OBStreamProfileList {
                 self.inner,
                 width,
                 height,
-                format as i32,
+                format,
                 fps,
                 &mut err_ptr,
             )

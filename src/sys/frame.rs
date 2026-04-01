@@ -1,5 +1,5 @@
 //! Frame and FrameSet related operations
-use super::enums::OBFormat;
+use super::orb::OBFormat;
 use super::{OBError, drop_ob_object, orb};
 
 /// A container of one or multiple frames

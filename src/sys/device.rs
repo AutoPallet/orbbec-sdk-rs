@@ -1,7 +1,10 @@
 //! Device management and properties
 use std::ffi::CStr;
+use std::mem::MaybeUninit;
 
-use super::enums::{OBDeviceType, OBPermissionType, OBPropertyID};
+use crate::prop::StructProperty;
+
+use super::orb::{OBDeviceType, OBPermissionType, OBPropertyID};
 use super::{OBError, drop_ob_object, orb};
 
 /// A class describing device information, representing the name, id, serial number and other basic information of an RGBD camera.
@@ -176,12 +179,7 @@ impl OBDevice {
         let mut err_ptr = std::ptr::null_mut();
 
         let supported = unsafe {
-            orb::ob_device_is_property_supported(
-                self.inner,
-                property_id as i32,
-                permission as i32,
-                &mut err_ptr,
-            )
+            orb::ob_device_is_property_supported(self.inner, property_id, permission, &mut err_ptr)
         };
 
         OBError::consume(err_ptr)?;
@@ -193,9 +191,7 @@ impl OBDevice {
     pub fn set_bool_property(&self, property_id: OBPropertyID, value: bool) -> Result<(), OBError> {
         let mut err_ptr = std::ptr::null_mut();
 
-        unsafe {
-            orb::ob_device_set_bool_property(self.inner, property_id as i32, value, &mut err_ptr)
-        };
+        unsafe { orb::ob_device_set_bool_property(self.inner, property_id, value, &mut err_ptr) };
 
         OBError::consume(err_ptr)
     }
@@ -204,9 +200,8 @@ impl OBDevice {
     pub fn get_bool_property(&self, property_id: OBPropertyID) -> Result<bool, OBError> {
         let mut err_ptr = std::ptr::null_mut();
 
-        let value = unsafe {
-            orb::ob_device_get_bool_property(self.inner, property_id as i32, &mut err_ptr)
-        };
+        let value =
+            unsafe { orb::ob_device_get_bool_property(self.inner, property_id, &mut err_ptr) };
 
         OBError::consume(err_ptr)?;
 
@@ -217,9 +212,7 @@ impl OBDevice {
     pub fn set_int_property(&self, property_id: OBPropertyID, value: i32) -> Result<(), OBError> {
         let mut err_ptr = std::ptr::null_mut();
 
-        unsafe {
-            orb::ob_device_set_int_property(self.inner, property_id as i32, value, &mut err_ptr)
-        };
+        unsafe { orb::ob_device_set_int_property(self.inner, property_id, value, &mut err_ptr) };
 
         OBError::consume(err_ptr)
     }
@@ -228,9 +221,8 @@ impl OBDevice {
     pub fn get_int_property(&self, property_id: OBPropertyID) -> Result<i32, OBError> {
         let mut err_ptr = std::ptr::null_mut();
 
-        let value = unsafe {
-            orb::ob_device_get_int_property(self.inner, property_id as i32, &mut err_ptr)
-        };
+        let value =
+            unsafe { orb::ob_device_get_int_property(self.inner, property_id, &mut err_ptr) };
 
         OBError::consume(err_ptr)?;
 
@@ -241,9 +233,7 @@ impl OBDevice {
     pub fn set_float_property(&self, property_id: OBPropertyID, value: f32) -> Result<(), OBError> {
         let mut err_ptr = std::ptr::null_mut();
 
-        unsafe {
-            orb::ob_device_set_float_property(self.inner, property_id as i32, value, &mut err_ptr)
-        };
+        unsafe { orb::ob_device_set_float_property(self.inner, property_id, value, &mut err_ptr) };
 
         OBError::consume(err_ptr)
     }
@@ -252,13 +242,55 @@ impl OBDevice {
     pub fn get_float_property(&self, property_id: OBPropertyID) -> Result<f32, OBError> {
         let mut err_ptr = std::ptr::null_mut();
 
-        let value = unsafe {
-            orb::ob_device_get_float_property(self.inner, property_id as i32, &mut err_ptr)
-        };
+        let value =
+            unsafe { orb::ob_device_get_float_property(self.inner, property_id, &mut err_ptr) };
 
         OBError::consume(err_ptr)?;
 
         Ok(value)
+    }
+
+    pub fn set_struct_property<T: StructProperty>(&self, value: T::Value) -> Result<(), OBError> {
+        let data_size: u32 = size_of::<T::Value>() as u32;
+        let value_ptr = (&value as *const T::Value).cast::<u8>() as *mut u8;
+
+        call_ob_function!(
+            orb::ob_device_set_structured_data,
+            self.inner,
+            T::ID,
+            value_ptr,
+            data_size,
+        )?;
+
+        Ok(())
+    }
+
+    pub fn get_struct_property<T: StructProperty>(&self) -> Result<T::Value, OBError> {
+        let mut value = MaybeUninit::<T::Value>::uninit();
+        let mut data_size: u32 = size_of::<T::Value>() as u32;
+        let mut err_ptr = std::ptr::null_mut();
+
+        unsafe {
+            orb::ob_device_get_structured_data(
+                self.inner,
+                T::ID,
+                value.as_mut_ptr() as *mut u8,
+                &mut data_size,
+                &mut err_ptr,
+            );
+        }
+
+        OBError::consume(err_ptr)?;
+
+        if data_size != size_of::<T>() as u32 {
+            panic!(
+                "unexpected size: got {}, expected {}",
+                data_size,
+                size_of::<T>()
+            );
+        }
+
+        Ok(unsafe { value.assume_init() })
     }
 
     /// Load the device preset

@@ -1,6 +1,7 @@
 //! Pipeline configuration and management
+use crate::sys::orb::OBSensorType;
+
 use super::device::OBDevice;
-use super::enums::OBSensorType;
 use super::frame::OBFrame;
 use super::stream::{OBStreamProfile, OBStreamProfileList};
 use super::{OBError, drop_ob_object, orb};
@@ -76,9 +77,8 @@ impl OBPipeline {
     ) -> Result<OBStreamProfileList, OBError> {
         let mut err_ptr = std::ptr::null_mut();
 
-        let profile_list = unsafe {
-            orb::ob_pipeline_get_stream_profile_list(self.inner, sensor as i32, &mut err_ptr)
-        };
+        let profile_list =
+            unsafe { orb::ob_pipeline_get_stream_profile_list(self.inner, sensor, &mut err_ptr) };
 
         OBError::consume(err_ptr)?;
 

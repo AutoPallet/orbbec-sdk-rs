@@ -529,7 +529,7 @@ impl PointCloudFilter {
     /// * `color` - Whether to generate RGB point cloud.
     pub fn set_color(&mut self, color: bool) -> Result<(), OrbbecError> {
         let format = if color {
-            Format::RGBPoint
+            Format::RgbPoint
         } else {
             Format::Point
         };

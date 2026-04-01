@@ -5,9 +5,9 @@ use kiss3d::window::Window;
 use nalgebra::Point3;
 use orbbec_sdk::{
     Context, Format, PermissionType, SensorType,
-    device::DeviceProperty,
     filter::{AlignFilter, Filter, PointCloudFilter},
     pipeline::{Config, Pipeline},
+    prop,
 };
 use std::sync::mpsc::channel;
 use std::thread;
@@ -65,30 +65,31 @@ fn main() {
     device.load_preset("High Accuracy").unwrap();
 
     // Enable depth noise filter
-    let hw_noise = DeviceProperty::HWNoiseRemoveFilterEnable(true);
     if device
-        .is_property_supported(hw_noise, PermissionType::Write)
+        .is_property_supported::<prop::HwNoiseRemoveFilterEnable>(PermissionType::Write)
         .unwrap()
     {
         // HW filter is supported, use it instead of SW filter
-        device.set_property(hw_noise).unwrap();
         device
-            .set_property(DeviceProperty::HWNoiseRemoveFilterThreshold(0.2))
+            .set_property::<prop::HwNoiseRemoveFilterEnable>(true)
             .unwrap();
         device
-            .set_property(DeviceProperty::DepthNoiseRemovalFilter(false))
+            .set_property::<prop::HwNoiseRemoveFilterThreshold>(0.2)
+            .unwrap();
+        device
+            .set_property::<prop::DepthNoiseRemovalFilter>(false)
             .unwrap();
         println!("Using HW depth noise filter.");
     } else {
         // HW filter not supported, use SW filter
         device
-            .set_property(DeviceProperty::DepthNoiseRemovalFilter(true))
+            .set_property::<prop::DepthNoiseRemovalFilter>(true)
             .unwrap();
         device
-            .set_property(DeviceProperty::DepthNoiseRemovalFilterMaxDiff(256))
+            .set_property::<prop::DepthNoiseRemovalFilterMaxDiff>(256)
             .unwrap();
         device
-            .set_property(DeviceProperty::DepthNoiseRemovalFilterMaxSpeckleSize(80))
+            .set_property::<prop::DepthNoiseRemovalFilterMaxSpeckleSize>(80)
             .unwrap();
         println!("Using SW depth noise filter.");
     }
@@ -106,7 +107,7 @@ fn main() {
     // Get color stream profile
     let color_profiles = pipeline.get_stream_profiles(SensorType::Color).unwrap();
     let color_profile = color_profiles
-        .get_video_stream_profile(COLOR_WIDTH, COLOR_HEIGHT, Format::MJPG, FPS)
+        .get_video_stream_profile(COLOR_WIDTH, COLOR_HEIGHT, Format::Mjpg, FPS)
         .unwrap();
 
     // Enable depth and color streams

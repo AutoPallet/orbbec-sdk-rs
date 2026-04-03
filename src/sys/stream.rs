@@ -1,5 +1,5 @@
 //! Stream profiles and related operations
-use super::{OBError, drop_ob_object, orb};
+use super::{OBError, call_ob_function, drop_ob_object, orb};
 use crate::sys::orb::OBFormat;
 
 /// Camera intrinsic parameters
@@ -63,13 +63,7 @@ impl OBStreamProfile {
 
     /// Get video stream profile intrinsic
     pub fn get_video_intrinsic(&self) -> Result<OBCameraIntrinsic, OBError> {
-        let mut err_ptr = std::ptr::null_mut();
-
-        let intrinsics =
-            unsafe { orb::ob_video_stream_profile_get_intrinsic(self.inner, &mut err_ptr) };
-
-        OBError::consume(err_ptr)?;
-
+        let intrinsics = call_ob_function!(orb::ob_video_stream_profile_get_intrinsic, self.inner)?;
         Ok(OBCameraIntrinsic::from(intrinsics))
     }
 }
@@ -116,21 +110,14 @@ impl OBStreamProfileList {
         format: OBFormat,
         fps: i32,
     ) -> Result<OBStreamProfile, OBError> {
-        let mut err_ptr = std::ptr::null_mut();
-
-        let profile = unsafe {
-            orb::ob_stream_profile_list_get_video_stream_profile(
-                self.inner,
-                width,
-                height,
-                format,
-                fps,
-                &mut err_ptr,
-            )
-        };
-
-        OBError::consume(err_ptr)?;
-
+        let profile = call_ob_function!(
+            orb::ob_stream_profile_list_get_video_stream_profile,
+            self.inner,
+            width,
+            height,
+            format,
+            fps
+        )?;
         Ok(OBStreamProfile::new(profile))
     }
 }

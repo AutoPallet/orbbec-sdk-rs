@@ -48,7 +48,36 @@ macro_rules! drop_ob_object {
 
 use drop_ob_object;
 
+macro_rules! call_ob_function {
+    ($function:path $(, $args:expr)* $(,)?) => {{
+        let mut err_ptr = std::ptr::null_mut();
+        let result = unsafe {
+            $function($($args,)* &mut err_ptr)
+        };
+        OBError::consume(err_ptr)?;
+
+        Ok(result)
+    }};
+}
+
+use call_ob_function;
+
+macro_rules! impl_ob_method {
+    (
+        $(#[$meta:meta])*
+        $name:ident => $return_ty:ty,
+        $function:path
+        $(, $arg:ident : $arg_ty:ty )* $(,)?
+    ) => {
+        $(#[$meta])*
+        pub fn $name(&self $(, $arg: $arg_ty )* ) -> Result<$return_ty, OBError> {
+            call_ob_function!($function, self.inner $(, $arg )*)
+        }
+    };
+}
+
 use crate::sys::orb::OBExceptionType;
+use impl_ob_method;
 
 /// The error class exposed by the SDK, users can get detailed error information according to the error
 pub struct OBError {

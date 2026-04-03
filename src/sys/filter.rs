@@ -4,7 +4,7 @@ use std::ffi::CStr;
 use super::frame::OBFrame;
 use super::orb::OBFilterConfigValueType;
 use super::stream::OBStreamProfile;
-use super::{OBError, drop_ob_object, orb};
+use super::{OBError, call_ob_function, drop_ob_object, impl_ob_method, orb};
 
 /// Filter Config Schema Item
 pub struct OBFilterConfigSchemaItem {
@@ -69,27 +69,15 @@ impl OBFilterConfigSchemaList {
         OBFilterConfigSchemaList { inner }
     }
 
-    /// Get the number of filter config schemas in the list
-    pub fn get_count(&self) -> Result<u32, OBError> {
-        let mut err_ptr = std::ptr::null_mut();
-
-        let count =
-            unsafe { orb::ob_filter_config_schema_list_get_count(self.inner, &mut err_ptr) };
-
-        OBError::consume(err_ptr)?;
-
-        Ok(count)
-    }
+    impl_ob_method!(
+        /// Get the number of filter config schemas in the list
+        get_count => u32,
+        orb::ob_filter_config_schema_list_get_count,
+    );
 
     /// Get the config schema item at the specified index
     pub fn get_filter_config_item(&self, index: u32) -> Result<OBFilterConfigSchemaItem, OBError> {
-        let mut err_ptr = std::ptr::null_mut();
-
-        let item =
-            unsafe { orb::ob_filter_config_schema_list_get_item(self.inner, index, &mut err_ptr) };
-
-        OBError::consume(err_ptr)?;
-
+        let item = call_ob_function!(orb::ob_filter_config_schema_list_get_item, self.inner, index)?;
         Ok(OBFilterConfigSchemaItem::from(item))
     }
 }
@@ -104,77 +92,44 @@ drop_ob_object!(OBFilter, ob_delete_filter);
 impl OBFilter {
     /// Create a filter object by name
     pub fn new(name: &CStr) -> Result<Option<Self>, OBError> {
-        let mut err_ptr = std::ptr::null_mut();
-
-        let filter = unsafe { orb::ob_create_filter(name.as_ptr(), &mut err_ptr) };
-
-        OBError::consume(err_ptr)?;
-
-        if filter.is_null() {
-            Ok(None)
+        let filter = call_ob_function!(orb::ob_create_filter, name.as_ptr())?;
+        Ok(if filter.is_null() {
+            None
         } else {
-            Ok(Some(OBFilter { inner: filter }))
-        }
+            Some(OBFilter { inner: filter })
+        })
     }
 
     /// Process the input frame and return the processed frame
     pub fn process(&self, input_frame: &OBFrame) -> Result<OBFrame, OBError> {
-        let mut err_ptr = std::ptr::null_mut();
-
-        let output_frame =
-            unsafe { orb::ob_filter_process(self.inner, input_frame.inner(), &mut err_ptr) };
-        OBError::consume(err_ptr)?;
-
-        Ok(OBFrame::new(output_frame))
+        let frame = call_ob_function!(orb::ob_filter_process, self.inner, input_frame.inner())?;
+        Ok(OBFrame::new(frame))
     }
 
     /// Get the filter config schema list of the filter
     pub fn get_config_schema_list(&self) -> Result<OBFilterConfigSchemaList, OBError> {
-        let mut err_ptr = std::ptr::null_mut();
-
-        let schema_list =
-            unsafe { orb::ob_filter_get_config_schema_list(self.inner, &mut err_ptr) };
-
-        OBError::consume(err_ptr)?;
-
-        Ok(OBFilterConfigSchemaList::new(schema_list))
+        let list = call_ob_function!(orb::ob_filter_get_config_schema_list, self.inner)?;
+        Ok(OBFilterConfigSchemaList::new(list))
     }
 
     /// Get the filter config value by name and cast to double
     pub fn get_config_value(&self, name: &CStr) -> Result<f64, OBError> {
-        let mut err_ptr = std::ptr::null_mut();
-
-        let value =
-            unsafe { orb::ob_filter_get_config_value(self.inner, name.as_ptr(), &mut err_ptr) };
-
-        OBError::consume(err_ptr)?;
-
-        Ok(value)
+        call_ob_function!(orb::ob_filter_get_config_value, self.inner, name.as_ptr())
     }
 
     /// Set the filter config value by name.
     /// The pass into value type is double, which will be cast to the actual type inside the filter
     pub fn set_config_value(&self, name: &CStr, value: f64) -> Result<(), OBError> {
-        let mut err_ptr = std::ptr::null_mut();
-
-        unsafe { orb::ob_filter_set_config_value(self.inner, name.as_ptr(), value, &mut err_ptr) };
-
-        OBError::consume(err_ptr)
+        call_ob_function!(orb::ob_filter_set_config_value, self.inner, name.as_ptr(), value)
     }
 
     /// Set the stream profile to which the filter will align to.
     /// Only valid for Align filter
     pub fn set_align_to(&self, stream_profile: &OBStreamProfile) -> Result<(), OBError> {
-        let mut err_ptr = std::ptr::null_mut();
-
-        unsafe {
-            orb::ob_align_filter_set_align_to_stream_profile(
-                self.inner,
-                stream_profile.inner(),
-                &mut err_ptr,
-            )
-        };
-
-        OBError::consume(err_ptr)
+        call_ob_function!(
+            orb::ob_align_filter_set_align_to_stream_profile,
+            self.inner,
+            stream_profile.inner()
+        )
     }
 }

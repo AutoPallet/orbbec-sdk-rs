@@ -288,6 +288,7 @@ impl bindgen::callbacks::ParseCallbacks for EnumCollector {
         &self,
         id: bindgen::callbacks::DiscoveredItemId,
         item: bindgen::callbacks::DiscoveredItem,
+        _source_loc: Option<&bindgen::callbacks::SourceLocation>,
     ) {
         // Record aliases to enums so we can pick the one with the right casing
         match item {
@@ -362,6 +363,15 @@ impl bindgen::callbacks::ParseCallbacks for Renamer {
             return type_rename.clone();
         }
         None
+    }
+
+    fn field_name(&self, field_info: bindgen::callbacks::FieldInfo) -> Option<String> {
+        Some(
+            field_info
+                .field_name
+                .to_case(convert_case::Case::Snake)
+                .to_string(),
+        )
     }
 
     fn process_comment(&self, comment: &str) -> Option<String> {

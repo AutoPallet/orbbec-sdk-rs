@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-bindgen = { version = "0.72" }
+bindgen = "0.72.0"
 convert_case = { version = "0.11" }
 prettyplease = { version = "0.2" }
 proc-macro2 = { version = "1.0" }
@@ -14,3 +14,6 @@ syn = { version = "2.0" }
 
 [[bin]]
 name = "codegen"
+
+[patch.crates-io]
+bindgen = { git = "https://github.com/wolfd/rust-bindgen.git", rev = "d266362a20899ed53d7f68e5ca7753f4b73f9bde" }

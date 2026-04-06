@@ -35,3 +35,6 @@ docs-only = []
 [package.metadata.docs.rs]
 no-default-features = true
 features = ["docs-only"]
+
+[patch.crates-io]
+bindgen = { git = "https://github.com/wolfd/rust-bindgen.git", rev = "d266362a20899ed53d7f68e5ca7753f4b73f9bde" }

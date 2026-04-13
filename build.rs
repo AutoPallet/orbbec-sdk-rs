@@ -124,7 +124,7 @@ fn main() {
         let target = std::env::var("TARGET").unwrap();
         codegen::generate_bindings(codegen::GenerateArgs {
             work_source_dir: work_src,
-            bindings_path: cargo_manifest_dir.join("bindings"),
+            sys_path: cargo_manifest_dir.join("src/sys"),
             target,
         });
     }

@@ -13,7 +13,7 @@ mod helpers;
 
 pub struct GenerateArgs {
     pub work_source_dir: PathBuf,
-    pub bindings_path: PathBuf,
+    pub sys_path: PathBuf,
     pub target: String,
 }
 
@@ -69,9 +69,10 @@ pub fn generate_bindings(args: GenerateArgs) {
     };
 
     // Write the bindings to file
-    std::fs::create_dir_all(&args.bindings_path).expect("Failed to create bindings directory");
+    let orb_path = args.sys_path.join("orb");
+    std::fs::create_dir_all(&orb_path).expect("Failed to create orb directory");
     bindings
-        .write_to_file(args.bindings_path.join("bindings.rs"))
+        .write_to_file(orb_path.join("bindings.rs"))
         .expect("Couldn't write bindings!");
 
     let struct_bindings = get_builder(&args.work_source_dir, &args.target)
@@ -81,12 +82,14 @@ pub fn generate_bindings(args: GenerateArgs) {
         .generate()
         .expect("Unable to generate struct bindings");
 
+    let prop_path = args.sys_path.join("prop");
+    std::fs::create_dir_all(&prop_path).expect("Failed to create prop directory");
     struct_bindings
-        .write_to_file(args.bindings_path.join("structs.rs"))
+        .write_to_file(prop_path.join("structs.rs"))
         .expect("Couldn't write struct bindings!");
 
     // Now, generate the property_id_types.rs file
-    let property_id_types_file = args.bindings_path.join("property_id_types.rs");
+    let property_id_types_file = prop_path.join("property_id_types.rs");
     {
         // Also parse the bindings to get the OBPropertyID enum comments
         let parsed_file = syn::parse_file(&bindings.to_string()).expect("Failed to parse bindings");
@@ -120,6 +123,16 @@ fn generate_property_id_types_file(
 ) -> proc_macro2::TokenStream {
     const NO_DOC_COMMENT: &str = "No doc comment found";
     let mut tokens = proc_macro2::TokenStream::new();
+
+    tokens.extend(quote::quote! {
+        use super::structs::OBDeviceTime;
+        use crate::sys::orb::{
+            OBBaselineCalibrationParam, OBDeviceSerialNumber, OBDeviceTemperature,
+            OBDispOffsetConfig, OBMultiDeviceSyncConfig, OBPresetResolutionConfig,
+            OBRegionOfInterest,
+        };
+    });
+
     let mut property_id_types = property_id_types.iter().collect::<Vec<_>>();
     property_id_types.sort_by_key(|(name, _)| *name);
 

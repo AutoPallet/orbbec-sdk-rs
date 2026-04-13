@@ -11,11 +11,11 @@ fn main() {
     let work_source_dir = std::env::var("WORK_DIR")
         .map(PathBuf::from)
         .unwrap_or(cargo_manifest_dir.join("OrbbecSDK"));
-    let bindings_path = cargo_manifest_dir.join("bindings");
+    let sys_path = cargo_manifest_dir.join("src/sys");
 
     codegen::generate_bindings(codegen::GenerateArgs {
         work_source_dir,
-        bindings_path,
+        sys_path,
         target: std::env::var("TARGET").unwrap_or("x86_64-unknown-linux-gnu".to_string()),
     });
 }

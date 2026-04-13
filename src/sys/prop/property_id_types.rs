@@ -1,3 +1,9 @@
+use super::structs::OBDeviceTime;
+use crate::sys::orb::{
+    OBBaselineCalibrationParam, OBDeviceSerialNumber, OBDeviceTemperature,
+    OBDispOffsetConfig, OBMultiDeviceSyncConfig, OBPresetResolutionConfig,
+    OBRegionOfInterest,
+};
 define_bool_property!(
     AntiCollusionActivationStatus, "@brief Anti_collusion activation status"
 );
@@ -11,8 +17,10 @@ define_int_property!(
     AutoCaptureIntervalTime,
     "@brief soft trigger auto capture interval time, use in OB_MULTI_DEVICE_SYNC_MODE_SOFTWARE_TRIGGERING mode"
 );
-///This property is a struct, but we don't have a struct value type
-struct BaselineCalibrationParam;
+define_struct_property!(
+    BaselineCalibrationParam, OBBaselineCalibrationParam,
+    "@brief Baseline calibration parameters"
+);
 define_bool_property!(
     BootIntoRecoveryMode,
     "@brief Enter recovery mode (flashing mode) when boot the device\n @attention The device will take effect after rebooting with the enable option. After entering recovery mode, you can upgrade the device system. Upgrading\n the system may cause system damage, please use it with caution."
@@ -34,8 +42,10 @@ define_int_property!(
 );
 define_bool_property!(CheckPpsSyncInSignal, "@brief check pps sync in signal");
 define_int_property!(ColorAeMaxExposure, "@brief Color AE max exposure");
-///This property is a struct, but we don't have a struct value type
-struct ColorAeRoi;
+define_struct_property!(
+    ColorAeRoi, OBRegionOfInterest,
+    "@brief Color Sensor AE ROI configuration\n @brief The Value type is @ref OBRegionOfInterest"
+);
 define_bool_property!(ColorAutoExposure, "@brief Color camera auto exposure");
 define_int_property!(
     ColorAutoExposurePriority, "@brief Color camera auto exposure priority"
@@ -113,8 +123,10 @@ define_bool_property!(
 );
 define_int_property!(DcPowerState, "@brief DC's power state, enum type: OBDCPowerState");
 define_float_property!(DebugEsgmConfidence, "@brief Confidence degree");
-///This property is a struct, but we don't have a struct value type
-struct DepthAeRoi;
+define_struct_property!(
+    DepthAeRoi, OBRegionOfInterest,
+    "@brief Depth Sensor AE ROI configuration\n @brief The Value type is @ref OBRegionOfInterest\n @brief Since the ir sensor is the same physical sensor as the depth sensor, this property will also effect the ir sensor."
+);
 define_bool_property!(DepthAlignHardware, "@brief Hardware d2c is on");
 define_int_property!(DepthAlignHardwareMode, "@brief Multi-resolution D2C mode");
 define_bool_property!(
@@ -204,20 +216,23 @@ define_bool_property!(
     DeviceRepower,
     "@brief Repower device (cut off power and power on again)\n\n @brief Currently using for GMSL device, cut off power and power on again by GMSL host driver."
 );
-///This property is a struct, but we don't have a struct value type
-struct DeviceSerialNumber;
+define_struct_property!(
+    DeviceSerialNumber, OBDeviceSerialNumber, "@brief get/set serial number"
+);
 ///This property is a struct, but we don't have a struct value type
 struct DeviceStaticIpConfigRecord;
-///This property is a struct, but we don't have a struct value type
-struct DeviceTemperature;
+define_struct_property!(
+    DeviceTemperature, OBDeviceTemperature, "@brief Device temperature information"
+);
 define_struct_property!(DeviceTime, OBDeviceTime, "@brief get/set device time");
 define_bool_property!(
     DeviceUsb2RepeatIdentify,
     "@brief Enable or disable the device to retry USB2.0 re-identification when the device is connected to a USB2.0 port.\n @brief This feature ensures that the device is not mistakenly identified as a USB 2.0 device when connected to a USB 3.0 port."
 );
 define_int_property!(DeviceWorkMode, "@brief Device operating mode (power consumption)");
-///This property is a struct, but we don't have a struct value type
-struct DispOffsetConfig;
+define_struct_property!(
+    DispOffsetConfig, OBDispOffsetConfig, "@brief Disparity offset interleaving"
+);
 define_int_property!(
     DispSearchOffset, "@brief Disparity search range offset, range: [0, 127]"
 );
@@ -364,8 +379,10 @@ define_bool_property!(
 );
 define_int_property!(MaxDepth, "@brief Maximum depth threshold");
 define_int_property!(MinDepth, "@brief Minimum depth threshold");
-///This property is a struct, but we don't have a struct value type
-struct MultiDeviceSyncConfig;
+define_struct_property!(
+    MultiDeviceSyncConfig, OBMultiDeviceSyncConfig,
+    "@brief Multi-device synchronization mode and parameter configuration"
+);
 define_int_property!(
     NetworkBandwidthType,
     "@brief Read the current network bandwidth type of the network device, whether it is Gigabit Ethernet or Fast Ethernet, such as G335LE."
@@ -377,8 +394,10 @@ define_float_property!(
     OnChipCalibrationHealthCheck,
     "@brief Get the health check result from device,range is [0.0f,1.5f]"
 );
-///This property is a struct, but we don't have a struct value type
-struct PresetResolutionConfig;
+define_struct_property!(
+    PresetResolutionConfig, OBPresetResolutionConfig,
+    "@brief Preset resolution ratio configuration"
+);
 define_bool_property!(PtpClockSyncEnable, "@brief PTP time synchronization enable");
 define_bool_property!(
     Rectify2,

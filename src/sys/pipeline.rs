@@ -1,5 +1,7 @@
 //! Pipeline configuration and management
-use crate::sys::orb::{OBAlignMode, OBCameraParam, OBFrameAggregateOutputMode, OBSensorType};
+use crate::sys::orb::{
+    OBAlignMode, OBCalibrationParam, OBCameraParam, OBFrameAggregateOutputMode, OBSensorType,
+};
 
 use super::device::OBDevice;
 use super::frame::OBFrame;
@@ -117,6 +119,15 @@ impl OBPipeline {
         get_camera_param => OBCameraParam,
         orb::ob_pipeline_get_camera_param,
     );
+
+    /// Get device calibration parameters with the specified configuration
+    pub fn get_calibration_param(&self, config: &OBConfig) -> Result<OBCalibrationParam, OBError> {
+        call_ob_function!(
+            orb::ob_pipeline_get_calibration_param,
+            self.inner,
+            config.inner
+        )
+    }
 
     impl_ob_method!(
         /// Disable frame synchronization

@@ -1,7 +1,6 @@
 use std::time::Duration;
 
 use clap::Parser;
-mod utils;
 use orbbec_sdk::{
     Context, ConvertType, Format, LogSeverity, PermissionType, SensorType,
     filter::{AlignFilter, Filter, FormatConvertFilter},
@@ -82,8 +81,7 @@ fn main() -> anyhow::Result<()> {
 
     // Get depth stream profile
     let depth_profiles = pipeline.get_stream_profiles(SensorType::Depth)?;
-    let depth_profile = utils::get_video_stream_profile(
-        &depth_profiles,
+    let depth_profile = depth_profiles.get_video_stream_profile(
         args.depth_width,
         args.depth_height,
         Format::Y16,
@@ -92,8 +90,7 @@ fn main() -> anyhow::Result<()> {
 
     // Get color stream profile
     let color_profiles = pipeline.get_stream_profiles(SensorType::Color)?;
-    let color_profile = utils::get_video_stream_profile(
-        &color_profiles,
+    let color_profile = color_profiles.get_video_stream_profile(
         args.color_width,
         args.color_height,
         Format::Mjpg,

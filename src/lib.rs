@@ -1,6 +1,7 @@
 #![doc = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/README.md"))]
 #![warn(missing_docs, future_incompatible, keyword_idents)]
 
+pub mod calibration;
 pub mod device;
 pub mod error;
 pub mod filter;
@@ -44,7 +45,10 @@ pub use crate::sys::orb::OBCoordinateSystemType as CoordinateSystem;
 pub use crate::sys::orb::OBAlignMode as AlignMode;
 
 #[doc(inline)]
-pub use crate::sys::orb::OBCameraIntrinsic as CameraIntrinsic;
+pub use crate::calibration::{CameraDistortion, CameraIntrinsic};
+
+#[doc(inline)]
+pub use crate::sys::orb::OBCameraDistortionModel as DistortionModel;
 
 #[doc(inline)]
 pub use crate::sys::orb::OBFrameAggregateOutputMode as FrameAggregateOutputMode;

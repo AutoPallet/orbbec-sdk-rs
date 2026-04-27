@@ -7,7 +7,7 @@ use crate::{
     frame::FrameSet,
     stream::{StreamProfile, StreamProfileList, VideoStreamProfile},
     sys::{
-        orb::OBCameraParam,
+        orb::{OBCalibrationParam, OBCameraParam},
         pipeline::{OBConfig, OBPipeline, frameset_trampoline},
     },
 };
@@ -140,6 +140,16 @@ impl Pipeline {
     pub fn get_camera_param(&mut self) -> Result<OBCameraParam, crate::error::OrbbecError> {
         self.inner
             .get_camera_param()
+            .map_err(crate::error::OrbbecError::from)
+    }
+
+    /// Get device calibration parameters with the specified configuration
+    pub fn get_calibration_param(
+        &mut self,
+        config: &Config,
+    ) -> Result<OBCalibrationParam, crate::error::OrbbecError> {
+        self.inner
+            .get_calibration_param(&config.inner)
             .map_err(crate::error::OrbbecError::from)
     }
 

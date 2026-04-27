@@ -1,11 +1,8 @@
 //! Stream module
 use crate::{
-    Format,
+    CameraDistortion, CameraIntrinsic, Format,
     error::OrbbecError,
-    sys::{
-        orb::OBCameraIntrinsic,
-        stream::{OBStreamProfile, OBStreamProfileList},
-    },
+    sys::stream::{OBStreamProfile, OBStreamProfileList},
 };
 
 /// Stream profile trait
@@ -25,8 +22,42 @@ impl VideoStreamProfile {
     }
 
     /// Get the camera intrinsic parameters for this video stream profile
-    pub fn get_intrinsic(&self) -> Result<OBCameraIntrinsic, OrbbecError> {
-        self.inner.get_video_intrinsic().map_err(OrbbecError::from)
+    pub fn get_intrinsic(&self) -> Result<CameraIntrinsic, OrbbecError> {
+        self.inner
+            .get_video_intrinsic()
+            .map(CameraIntrinsic::from)
+            .map_err(OrbbecError::from)
+    }
+
+    /// Get the camera distortion parameters for this video stream profile
+    pub fn get_distortion(&self) -> Result<CameraDistortion, OrbbecError> {
+        self.inner
+            .get_video_distortion()
+            .map(CameraDistortion::from)
+            .map_err(OrbbecError::from)
+    }
+
+    #[cfg(feature = "nalgebra")]
+    /// Get the extrinsic for source stream to target stream
+    /// ### Arguments
+    /// * `target` - The target video stream profile.
+    /// ### Returns
+    /// The transform (in millimeters) from the source stream to the target stream as a 3D isometry.
+    pub fn get_extrinsic_to(
+        &self,
+        target: &VideoStreamProfile,
+    ) -> Result<nalgebra::Isometry3<f32>, OrbbecError> {
+        self.inner
+            .get_extrinsic_to(target.inner())
+            .map_err(OrbbecError::from)
+            .map(|t| {
+                let rot = nalgebra::Rotation3::from_matrix_unchecked(nalgebra::Matrix3::new(
+                    t.rot[0], t.rot[1], t.rot[2], t.rot[3], t.rot[4], t.rot[5], t.rot[6], t.rot[7],
+                    t.rot[8],
+                ));
+                let trans = nalgebra::Translation3::new(t.trans[0], t.trans[1], t.trans[2]);
+                nalgebra::Isometry3::from_parts(trans, rot.into())
+            })
     }
 
     /// Get the width of this video stream profile in pixels
@@ -77,6 +108,10 @@ impl StreamProfileList {
     }
 
     /// Get the corresponding video stream profile through the passed parameters.
+    ///
+    /// On failure, the returned error is enriched with the list of available
+    /// video stream profiles in this list (see [`Self::describe_video_profiles`]),
+    /// so callers don't have to format that themselves.
     /// ### Arguments
     /// * `width` - Width of the stream in pixels
     /// * `height` - Height of the stream in pixels
@@ -89,10 +124,65 @@ impl StreamProfileList {
         format: Format,
         fps: u8,
     ) -> Result<VideoStreamProfile, OrbbecError> {
-        self.inner
+        match self
+            .inner
             .get_video_stream_profile(width as i32, height as i32, format, fps as i32)
-            .map(VideoStreamProfile::new)
-            .map_err(OrbbecError::from)
+        {
+            Ok(p) => Ok(VideoStreamProfile::new(p)),
+            Err(err) => {
+                let available = self.describe_video_profiles();
+                let mut orbbec_err = OrbbecError::from(err);
+                let prefix = format!(
+                    "Requested video stream profile {width}x{height} @ {fps}fps ({format:?}) is not supported. Available video stream profiles:\n{available}\nUnderlying error",
+                );
+                let data = match &mut orbbec_err {
+                    OrbbecError::Unknown(d)
+                    | OrbbecError::StdException(d)
+                    | OrbbecError::CameraDisconnected(d)
+                    | OrbbecError::PlatformException(d)
+                    | OrbbecError::InvalidValue(d)
+                    | OrbbecError::WrongAPICallSequence(d)
+                    | OrbbecError::NotImplemented(d)
+                    | OrbbecError::IOException(d)
+                    | OrbbecError::MemoryException(d)
+                    | OrbbecError::UnsupportedOperation(d)
+                    | OrbbecError::AccessDenied(d) => d,
+                };
+                data.message = format!("{prefix}: {}", data.message);
+                Err(orbbec_err)
+            }
+        }
+    }
+
+    /// Render every video stream profile in this list as a human-readable
+    /// `WxH @ FPSfps (FORMAT)` line, one per line. Used by
+    /// [`Self::get_video_stream_profile`] to enrich its error message and
+    /// surfaced publicly for callers that want to log the available
+    /// profiles without triggering a lookup failure.
+    pub fn describe_video_profiles(&self) -> String {
+        let mut entries = Vec::new();
+        for profile in self {
+            match profile {
+                Ok(p) => {
+                    let format = p
+                        .format()
+                        .map(|f| format!("{f:?}"))
+                        .unwrap_or_else(|_| "Unknown".to_string());
+                    entries.push(format!(
+                        "{}x{} @ {}fps ({format})",
+                        p.width(),
+                        p.height(),
+                        p.fps()
+                    ));
+                }
+                Err(err) => entries.push(format!("<error reading profile: {err}>")),
+            }
+        }
+        if entries.is_empty() {
+            "none reported".to_string()
+        } else {
+            entries.join("\n")
+        }
     }
 
     /// Get the number of stream profiles in this list

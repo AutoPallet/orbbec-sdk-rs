@@ -1,6 +1,6 @@
 //! Stream profiles and related operations
 use super::{OBError, call_ob_function, drop_ob_object, impl_ob_method, orb};
-use crate::sys::orb::{OBCameraIntrinsic, OBFormat};
+use crate::sys::orb::{OBCameraDistortion, OBCameraIntrinsic, OBD2CTransform, OBFormat};
 
 /// Stream profile
 pub struct OBStreamProfile {
@@ -23,6 +23,22 @@ impl OBStreamProfile {
         get_video_intrinsic => OBCameraIntrinsic,
         orb::ob_video_stream_profile_get_intrinsic,
     );
+
+    impl_ob_method!(
+        /// Get video stream profile distortion
+        get_video_distortion => OBCameraDistortion,
+        orb::ob_video_stream_profile_get_distortion,
+    );
+
+    /// Get the extrinsic for source stream to target stream
+    pub fn get_extrinsic_to(&self, target: &OBStreamProfile) -> Result<OBD2CTransform, OBError> {
+        let transform = call_ob_function!(
+            orb::ob_stream_profile_get_extrinsic_to,
+            self.inner,
+            target.inner(),
+        )?;
+        Ok(transform)
+    }
 
     impl_ob_method!(
         /// Get stream profile format

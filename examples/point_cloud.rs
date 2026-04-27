@@ -1,4 +1,3 @@
-mod utils;
 use std::time::Duration;
 
 use anyhow::Result;
@@ -116,8 +115,7 @@ fn main() -> Result<()> {
 
     // Get depth stream profile
     let depth_profiles = pipeline.get_stream_profiles(SensorType::Depth)?;
-    let depth_profile = utils::get_video_stream_profile(
-        &depth_profiles,
+    let depth_profile = depth_profiles.get_video_stream_profile(
         args.depth_width,
         args.depth_height,
         Format::Y16,
@@ -126,8 +124,7 @@ fn main() -> Result<()> {
 
     // Get color stream profile
     let color_profiles = pipeline.get_stream_profiles(SensorType::Color)?;
-    let color_profile = utils::get_video_stream_profile(
-        &color_profiles,
+    let color_profile = color_profiles.get_video_stream_profile(
         args.color_width,
         args.color_height,
         Format::Mjpg,

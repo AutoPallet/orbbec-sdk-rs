@@ -23,7 +23,7 @@ const POINT_CLOUD_SCALE: f32 = 1e-3; // 1 mm to meters
 /// Convert raw point cloud data to a vector of 3D points with color
 fn convert_pointcloud(data: &[u8], with_color: bool) -> rerun::Points3D {
     let point_size = if with_color { 6 } else { 3 }; // Each point has 3 coordinates (x, y, z) and optionally 3 color channels (r, g, b).
-    let num_points = (data.len() / (point_size * 4)) as usize; // Each float is 4 bytes
+    let num_points = data.len() / (point_size * 4); // Each float is 4 bytes
     let mut points = Vec::with_capacity(num_points);
     let mut colors = Vec::with_capacity(num_points);
 
@@ -171,7 +171,7 @@ fn main() -> Result<()> {
         &rerun::Pinhole::new(
             rerun::components::PinholeProjection::from_focal_length_and_principal_point(
                 [intrinsic.fx, intrinsic.fy],
-                [intrinsic.cx as f32, intrinsic.cy as f32],
+                [intrinsic.cx, intrinsic.cy],
             ),
         ),
     )?;

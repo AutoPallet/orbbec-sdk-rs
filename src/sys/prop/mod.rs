@@ -24,6 +24,7 @@ pub trait StructProperty: Property {}
 macro_rules! define_property_base {
     ($name:ident, $value:ty, $doc:literal) => {
         #[doc = $doc]
+        #[allow(clippy::empty_docs)]
         pub struct $name;
 
         impl $crate::sys::prop::Property for $name {

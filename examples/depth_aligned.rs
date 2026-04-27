@@ -134,7 +134,7 @@ fn main() -> anyhow::Result<()> {
         &rerun::Pinhole::new(
             rerun::components::PinholeProjection::from_focal_length_and_principal_point(
                 [intrinsic.fx, intrinsic.fy],
-                [intrinsic.cx as f32, intrinsic.cy as f32],
+                [intrinsic.cx, intrinsic.cy],
             ),
         ),
     )?;

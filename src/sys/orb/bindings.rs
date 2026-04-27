@@ -4833,12 +4833,12 @@ unsafe extern "C" {
 unsafe extern "C" {
     #[doc = "@brief Get the sensor of the frame\n\n @attention Require @ref ob_delete_sensor() to release the return sensor.\n\n @param[in] frame frame object\n @param[out] error Pointer to an error object that will be set if an error occurs.\n\n @return ob_sensor* return the sensor of the frame, if the frame is not captured by a sensor or the sensor stream has been destroyed, it will return NULL"]
     pub fn ob_frame_get_sensor(frame: *const ob_frame, error: *mut *mut ob_error)
-        -> *mut ob_sensor;
+    -> *mut ob_sensor;
 }
 unsafe extern "C" {
     #[doc = "@brief Get the device of the frame\n\n @attention Require @ref ob_delete_device() to release the return device.\n\n @param[in] frame frame object\n @param[out] error Pointer to an error object that will be set if an error occurs.\n\n @return ob_device* return the device of the frame, if the frame is not captured by a sensor stream or the device has been destroyed, it will return NULL"]
     pub fn ob_frame_get_device(frame: *const ob_frame, error: *mut *mut ob_error)
-        -> *mut ob_device;
+    -> *mut ob_device;
 }
 unsafe extern "C" {
     #[doc = "@brief Get video frame width\n\n @param[in] frame Frame object\n @param[out] error Pointer to an error object that will be set if an error occurs.\n\n @return uint32_t return the frame width"]
@@ -4881,7 +4881,7 @@ unsafe extern "C" {
 unsafe extern "C" {
     #[doc = "@brief Get the value scale of the depth frame. The pixel value of the depth frame is multiplied by the scale to give a depth value in millimeters.\n For example, if valueScale=0.1 and a certain coordinate pixel value is pixelValue=10000, then the depth value = pixelValue*valueScale = 10000*0.1=1000mm.\n\n @param[in] frame Frame object\n @param[out] error Pointer to an error object that will be set if an error occurs.\n\n @return float The value scale of the depth frame"]
     pub fn ob_depth_frame_get_value_scale(frame: *const ob_frame, error: *mut *mut ob_error)
-        -> f32;
+    -> f32;
 }
 unsafe extern "C" {
     #[doc = "@brief Set the value scale of the depth frame. The pixel value of the depth frame is multiplied by the scale to give a depth value in millimeters.\n For example, if valueScale=0.1 and a certain coordinate pixel value is pixelValue=10000, then the depth value = pixelValue*valueScale = 10000*0.1=1000mm.\n\n @param[in] frame Frame object\n @param[in] value_scale The value scale of the depth frame\n @param[out] error Pointer to an error object that will be set if an error occurs."]
@@ -4908,7 +4908,7 @@ unsafe extern "C" {
 unsafe extern "C" {
     #[doc = "@brief Get the temperature when acquiring the accelerometer frame.\n\n @param[in] frame Accelerometer frame.\n @param[out] error Pointer to an error object that will be set if an error occurs.\n\n @return float Return the temperature value."]
     pub fn ob_accel_frame_get_temperature(frame: *const ob_frame, error: *mut *mut ob_error)
-        -> f32;
+    -> f32;
 }
 unsafe extern "C" {
     #[doc = "@brief Get gyroscope frame data.\n\n @param[in] frame Gyroscope frame.\n @param[out] error Pointer to an error object that will be set if an error occurs.\n\n @return ob_gyro_value Return the gyroscope data."]
@@ -4980,7 +4980,7 @@ unsafe extern "C" {
 unsafe extern "C" {
     #[doc = "@brief Get point cloud frame width\n\n @param[in] frame point cloud Frame object\n @param[out] error Pointer to an error object that will be set if an error occurs.\n\n @return uint32_t return the point cloud frame width"]
     pub fn ob_point_cloud_frame_get_width(frame: *const ob_frame, error: *mut *mut ob_error)
-        -> u32;
+    -> u32;
 }
 unsafe extern "C" {
     #[doc = "@brief Get point cloud frame height\n\n @param[in] frame point cloud Frame object\n @param[out] error Pointer to an error object that will be set if an error occurs.\n\n @return uint32_t return the point cloud frame height"]
@@ -5717,7 +5717,7 @@ unsafe extern "C" {
 unsafe extern "C" {
     #[doc = "@brief Convert OBFrameMetadataType to \" char* \" type and then return.\n\n @param[in] type OBFrameMetadataType type.\n\n @return OBFrameMetadataType of \"char*\" type."]
     pub fn ob_meta_data_type_to_string(type_: OBFrameMetadataType)
-        -> *const ::std::os::raw::c_char;
+    -> *const ::std::os::raw::c_char;
 }
 unsafe extern "C" {
     #[doc = "@brief Convert OBStreamType to OBSensorType.\n\n @param[in] type The sensor type to convert.\n\n @return OBStreamType The corresponding stream type."]

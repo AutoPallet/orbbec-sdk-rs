@@ -94,5 +94,5 @@ unsafe extern "C" fn log_trampoline(
         unsafe { std::ffi::CStr::from_ptr(message) }.to_string_lossy()
     };
 
-    callback(LogSeverity::from(severity), message.as_ref());
+    callback(severity, message.as_ref());
 }

@@ -1,11 +1,11 @@
 use super::structs::OBDeviceTime;
 use crate::sys::orb::{
-    OBBaselineCalibrationParam, OBDeviceSerialNumber, OBDeviceTemperature,
-    OBDispOffsetConfig, OBMultiDeviceSyncConfig, OBPresetResolutionConfig,
-    OBRegionOfInterest,
+    OBBaselineCalibrationParam, OBDeviceSerialNumber, OBDeviceTemperature, OBDispOffsetConfig,
+    OBMultiDeviceSyncConfig, OBPresetResolutionConfig, OBRegionOfInterest,
 };
 define_bool_property!(
-    AntiCollusionActivationStatus, "@brief Anti_collusion activation status"
+    AntiCollusionActivationStatus,
+    "@brief Anti_collusion activation status"
 );
 ///This property is a struct, but we don't have a struct value type
 struct AsicSerialNumber;
@@ -18,7 +18,8 @@ define_int_property!(
     "@brief soft trigger auto capture interval time, use in OB_MULTI_DEVICE_SYNC_MODE_SOFTWARE_TRIGGERING mode"
 );
 define_struct_property!(
-    BaselineCalibrationParam, OBBaselineCalibrationParam,
+    BaselineCalibrationParam,
+    OBBaselineCalibrationParam,
     "@brief Baseline calibration parameters"
 );
 define_bool_property!(
@@ -43,18 +44,22 @@ define_int_property!(
 define_bool_property!(CheckPpsSyncInSignal, "@brief check pps sync in signal");
 define_int_property!(ColorAeMaxExposure, "@brief Color AE max exposure");
 define_struct_property!(
-    ColorAeRoi, OBRegionOfInterest,
+    ColorAeRoi,
+    OBRegionOfInterest,
     "@brief Color Sensor AE ROI configuration\n @brief The Value type is @ref OBRegionOfInterest"
 );
 define_bool_property!(ColorAutoExposure, "@brief Color camera auto exposure");
 define_int_property!(
-    ColorAutoExposurePriority, "@brief Color camera auto exposure priority"
+    ColorAutoExposurePriority,
+    "@brief Color camera auto exposure priority"
 );
 define_bool_property!(
-    ColorAutoWhiteBalance, "@brief Color camera automatic white balance"
+    ColorAutoWhiteBalance,
+    "@brief Color camera automatic white balance"
 );
 define_int_property!(
-    ColorBacklightCompensation, "@brief Color camera brightness compensation"
+    ColorBacklightCompensation,
+    "@brief Color camera brightness compensation"
 );
 define_int_property!(ColorBrightness, "@brief Color camera brightness adjustment");
 define_int_property!(ColorContrast, "@brief Color camera contrast adjustment");
@@ -72,40 +77,50 @@ define_int_property!(ColorHue, "@brief Color camera color tint");
 define_bool_property!(ColorLeftFlip, "@brief Left Color flip");
 define_bool_property!(ColorLeftMirror, "@brief Left Color mirror");
 define_int_property!(
-    ColorLeftRotate, "@brief Left Color sensor rotation, angle{0, 90, 180, 270}"
+    ColorLeftRotate,
+    "@brief Left Color sensor rotation, angle{0, 90, 180, 270}"
 );
 define_int_property!(ColorMaximalGain, "@brief Color camera maximal gain");
 define_int_property!(ColorMaximalShutter, "@brief Color camera shutter gain");
 define_bool_property!(ColorMirror, "@brief Color mirror");
 define_int_property!(
-    ColorPowerLineFrequency, "@brief Color Camera Power Line Frequency"
+    ColorPowerLineFrequency,
+    "@brief Color Camera Power Line Frequency"
 );
 define_int_property!(ColorPresetPriority, "@brief Color camera preset priority");
 define_bool_property!(ColorRightFlip, "@brief Right Color flip");
 define_bool_property!(ColorRightMirror, "@brief Right Color mirror");
 define_int_property!(
-    ColorRightRotate, "@brief Right Color sensor rotation, angle{0, 90, 180, 270}"
+    ColorRightRotate,
+    "@brief Right Color sensor rotation, angle{0, 90, 180, 270}"
 );
 define_int_property!(
-    ColorRoiBrightness, "@brief Color camera ROI brightness adjustment"
+    ColorRoiBrightness,
+    "@brief Color camera ROI brightness adjustment"
 );
 define_int_property!(ColorRoll, "@brief Color camera image rotation");
 define_int_property!(
-    ColorRotate, "@brief Color sensor rotation, angle{0, 90, 180, 270}"
+    ColorRotate,
+    "@brief Color sensor rotation, angle{0, 90, 180, 270}"
 );
 define_int_property!(ColorSaturation, "@brief Color camera saturation adjustment");
 define_int_property!(ColorSharpness, "@brief Color camera sharpness adjustment");
 define_int_property!(ColorShutter, "@brief Color camera shutter adjustment");
 ///This property is a struct, but we don't have a struct value type
 struct ColorSyncedExposureParam;
-define_int_property!(ColorWhiteBalance, "@brief Color camera white balance adjustment");
+define_int_property!(
+    ColorWhiteBalance,
+    "@brief Color camera white balance adjustment"
+);
 define_bool_property!(ConfidenceFlip, "@brief Confidence stream flip enable");
 define_bool_property!(ConfidenceMirror, "@brief Confidence stream mirror enable");
 define_int_property!(
-    ConfidenceRotate, "@brief Confidence stream rotate angle{0, 90, 180, 270}"
+    ConfidenceRotate,
+    "@brief Confidence stream rotate angle{0, 90, 180, 270}"
 );
 define_bool_property!(
-    ConfidenceStreamFilter, "@brief Enable or disable confidence stream filter"
+    ConfidenceStreamFilter,
+    "@brief Enable or disable confidence stream filter"
 );
 define_int_property!(
     ConfidenceStreamFilterThreshold,
@@ -121,10 +136,14 @@ define_bool_property!(
     D2CPreprocess,
     "@brief D2C preprocessing switch (such as RGB cropping), 0: off, 1: on"
 );
-define_int_property!(DcPowerState, "@brief DC's power state, enum type: OBDCPowerState");
+define_int_property!(
+    DcPowerState,
+    "@brief DC's power state, enum type: OBDCPowerState"
+);
 define_float_property!(DebugEsgmConfidence, "@brief Confidence degree");
 define_struct_property!(
-    DepthAeRoi, OBRegionOfInterest,
+    DepthAeRoi,
+    OBRegionOfInterest,
     "@brief Depth Sensor AE ROI configuration\n @brief The Value type is @ref OBRegionOfInterest\n @brief Since the ir sensor is the same physical sensor as the depth sensor, this property will also effect the ir sensor."
 );
 define_bool_property!(DepthAlignHardware, "@brief Hardware d2c is on");
@@ -135,7 +154,8 @@ define_bool_property!(
 );
 define_int_property!(DepthAutoExposurePriority, "@brief Depth camera priority");
 define_int_property!(
-    DepthCroppingMode, "@brief Depth cropping mode device: OB_DEPTH_CROPPING_MODE"
+    DepthCroppingMode,
+    "@brief Depth cropping mode device: OB_DEPTH_CROPPING_MODE"
 );
 define_int_property!(
     DepthExposure,
@@ -156,7 +176,8 @@ define_int_property!(
 define_bool_property!(DepthMirror, "@brief Depth mirror");
 define_bool_property!(DepthNoiseRemovalFilter, "@brief Software filter switch");
 define_int_property!(
-    DepthNoiseRemovalFilterMaxDiff, "@brief maxdiff for depth noise removal filter"
+    DepthNoiseRemovalFilterMaxDiff,
+    "@brief maxdiff for depth noise removal filter"
 );
 define_int_property!(
     DepthNoiseRemovalFilterMaxSpeckleSize,
@@ -174,21 +195,24 @@ define_bool_property!(
     "@brief Depth effect dedistortion, true: on, false: off. mutually exclusive with D2C function, RM_Filter disable When hardware or software D2C is enabled."
 );
 define_int_property!(
-    DepthRotate, "@brief Depth sensor rotation, angle{0, 90, 180, 270}"
+    DepthRotate,
+    "@brief Depth sensor rotation, angle{0, 90, 180, 270}"
 );
 define_float_property!(
     DepthUnitFlexibleAdjustment,
     "@brief Depth unit flexible adjustment\\\n @brief This property allows continuous adjustment of the depth unit, unlike @ref OB_PROP_DEPTH_PRECISION_LEVEL_INT must be set to some fixed value."
 );
 define_bool_property!(
-    DepthWithConfidenceStreamEnable, "@brief Depth with confidence stream enable"
+    DepthWithConfidenceStreamEnable,
+    "@brief Depth with confidence stream enable"
 );
 define_int_property!(
     DeviceAeReference,
     "@brief Device AE reference source\n - 0: Depth based\n - 1: Color based"
 );
 define_int_property!(
-    DeviceAeStrategy, "@brief Device AE strategy\n - 0: Default\n - 1: Motion"
+    DeviceAeStrategy,
+    "@brief Device AE strategy\n - 0: Default\n - 1: Motion"
 );
 define_int_property!(
     DeviceCommunicationType,
@@ -217,27 +241,38 @@ define_bool_property!(
     "@brief Repower device (cut off power and power on again)\n\n @brief Currently using for GMSL device, cut off power and power on again by GMSL host driver."
 );
 define_struct_property!(
-    DeviceSerialNumber, OBDeviceSerialNumber, "@brief get/set serial number"
+    DeviceSerialNumber,
+    OBDeviceSerialNumber,
+    "@brief get/set serial number"
 );
 ///This property is a struct, but we don't have a struct value type
 struct DeviceStaticIpConfigRecord;
 define_struct_property!(
-    DeviceTemperature, OBDeviceTemperature, "@brief Device temperature information"
+    DeviceTemperature,
+    OBDeviceTemperature,
+    "@brief Device temperature information"
 );
 define_struct_property!(DeviceTime, OBDeviceTime, "@brief get/set device time");
 define_bool_property!(
     DeviceUsb2RepeatIdentify,
     "@brief Enable or disable the device to retry USB2.0 re-identification when the device is connected to a USB2.0 port.\n @brief This feature ensures that the device is not mistakenly identified as a USB 2.0 device when connected to a USB 3.0 port."
 );
-define_int_property!(DeviceWorkMode, "@brief Device operating mode (power consumption)");
+define_int_property!(
+    DeviceWorkMode,
+    "@brief Device operating mode (power consumption)"
+);
 define_struct_property!(
-    DispOffsetConfig, OBDispOffsetConfig, "@brief Disparity offset interleaving"
+    DispOffsetConfig,
+    OBDispOffsetConfig,
+    "@brief Disparity offset interleaving"
 );
 define_int_property!(
-    DispSearchOffset, "@brief Disparity search range offset, range: [0, 127]"
+    DispSearchOffset,
+    "@brief Disparity search range offset, range: [0, 127]"
 );
 define_int_property!(
-    DispSearchRangeMode, "@brief Disparity search range mode, 1: 128, 2: 256"
+    DispSearchRangeMode,
+    "@brief Disparity search range mode, 1: 128, 2: 256"
 );
 define_bool_property!(
     DisparityToDepth,
@@ -250,34 +285,48 @@ define_bool_property!(
 define_int_property!(FanWorkMode, "@brief Fan mode switch");
 define_bool_property!(Flood, "@brief IR flood switch");
 define_int_property!(FloodLevel, "@brief IR flood level");
-define_int_property!(FrameInterleaveConfigIndex, "@brief frame interleave config index");
+define_int_property!(
+    FrameInterleaveConfigIndex,
+    "@brief frame interleave config index"
+);
 define_bool_property!(
-    FrameInterleaveEnable, "@brief frame interleave enable (true:enable,false:disable)"
+    FrameInterleaveEnable,
+    "@brief frame interleave enable (true:enable,false:disable)"
 );
 define_int_property!(
-    FrameInterleaveLaserPatternSyncDelay, "@brief laser pattern sync with delay(us)"
+    FrameInterleaveLaserPatternSyncDelay,
+    "@brief laser pattern sync with delay(us)"
 );
 define_bool_property!(Gpm, "@brief Enable/disable GPM function");
 define_bool_property!(
-    HardwareDistortionSwitch, "@brief Hardware distortion switch Rectify"
+    HardwareDistortionSwitch,
+    "@brief Hardware distortion switch Rectify"
 );
 define_bool_property!(HdrMerge, "@brief Depth HDR merge, true: on, false: off.");
 define_bool_property!(
-    Heartbeat, "@brief Heartbeat monitoring function switch, 0: Disable, 1: Enable"
+    Heartbeat,
+    "@brief Heartbeat monitoring function switch, 0: Disable, 1: Enable"
 );
 define_bool_property!(
-    HwNoiseRemoveFilterEnable, "@brief hardware noise remove filter switch"
+    HwNoiseRemoveFilterEnable,
+    "@brief hardware noise remove filter switch"
 );
 define_float_property!(
     HwNoiseRemoveFilterThreshold,
     "@brief hardware noise remove filter threshold ,range [0.0 - 1.0]"
 );
-define_bool_property!(IndicatorLight, "@brief Indicator switch, 0: Disable, 1: Enable");
+define_bool_property!(
+    IndicatorLight,
+    "@brief Indicator switch, 0: Disable, 1: Enable"
+);
 define_int_property!(
     IntraCameraSyncReference,
     "@brief Intra-camera Sync Reference based on the exposure start time, the exposure middle time, or the exposure end time. the definition in @ref\n OBIntraCameraSyncReference"
 );
-define_int_property!(IrAeMaxExposure, "@brief Max exposure time of IR auto exposure");
+define_int_property!(
+    IrAeMaxExposure,
+    "@brief Max exposure time of IR auto exposure"
+);
 define_bool_property!(
     IrAutoExposure,
     "@brief Infrared camera auto exposure (depth camera will be set synchronously under some models of devices)"
@@ -297,11 +346,13 @@ define_int_property!(
     "@brief Infrared camera gain adjustment (the depth camera will be set synchronously under some models of devices)"
 );
 define_bool_property!(
-    IrLongExposure, "@brief IR long exposure mode switch read and write."
+    IrLongExposure,
+    "@brief IR long exposure mode switch read and write."
 );
 define_bool_property!(IrMirror, "@brief IR mirror");
 define_bool_property!(
-    IrRectify, "@brief ir rectify status,true: ir rectify, false: no rectify"
+    IrRectify,
+    "@brief ir rectify status,true: ir rectify, false: no rectify"
 );
 define_bool_property!(
     IrRightFlip,
@@ -309,10 +360,12 @@ define_bool_property!(
 );
 define_bool_property!(IrRightMirror, "@brief Right IR sensor mirror state");
 define_int_property!(
-    IrRightRotate, "@brief Right IR sensor rotation, angle{0, 90, 180, 270}"
+    IrRightRotate,
+    "@brief Right IR sensor rotation, angle{0, 90, 180, 270}"
 );
 define_int_property!(
-    IrRotate, "@brief IR/Left-IR sensor rotation, angle{0, 90, 180, 270}"
+    IrRotate,
+    "@brief IR/Left-IR sensor rotation, angle{0, 90, 180, 270}"
 );
 define_bool_property!(
     IrShortExposure,
@@ -326,7 +379,8 @@ define_bool_property!(
 define_int_property!(LaserControl, "@brief Laser control, 0: off, 1: on, 2: auto");
 define_float_property!(LaserCurrent, "@brief Laser current (uint: mA)");
 define_bool_property!(
-    LaserHighTemperatureProtect, "@brief Laser high temperature protection"
+    LaserHighTemperatureProtect,
+    "@brief Laser high temperature protection"
 );
 define_int_property!(
     LaserMode,
@@ -351,26 +405,36 @@ define_bool_property!(
     "@brief Query the status of laser pulse width protection (read-only)"
 );
 define_bool_property!(Ldp, "@brief LDP switch");
-define_int_property!(LdpMeasureDistance, "@brief LDP's measure distance, unit: mm");
+define_int_property!(
+    LdpMeasureDistance,
+    "@brief LDP's measure distance, unit: mm"
+);
 define_bool_property!(LdpStatus, "@brief LDP status");
 define_int_property!(
-    LidarApdTemperature, "@brief LiDAR: get apd temperature, uint: 0.01degrees delsius"
+    LidarApdTemperature,
+    "@brief LiDAR: get apd temperature, uint: 0.01degrees delsius"
 );
 define_int_property!(LidarApplyConfigs, "@brief LiDAR: apply configs");
 define_int_property!(
-    LidarMcuTemperature, "@brief LiDAR: get mcu temperature, uint: 0.01degrees delsius"
+    LidarMcuTemperature,
+    "@brief LiDAR: get mcu temperature, uint: 0.01degrees delsius"
 );
 define_float_property!(LidarMemsFovSize, "@brief LiDAR: set/get mems fov size");
 define_float_property!(LidarMemsFrenquency, "@brief LiDAR: set/get mems frequency");
 define_int_property!(
-    LidarMotorSpinSpeed, "@brief LiDAR: get realtime motor spin speed, unit:0.01rpm"
+    LidarMotorSpinSpeed,
+    "@brief LiDAR: get realtime motor spin speed, unit:0.01rpm"
 );
 define_int_property!(LidarPort, "@brief LiDAR: set/get port");
 define_int_property!(
-    LidarRepetitiveScanMode, "@brief LiDAR: get/set repetitive scan mode"
+    LidarRepetitiveScanMode,
+    "@brief LiDAR: get/set repetitive scan mode"
 );
 define_int_property!(LidarSpecificMode, "@brief LiDAR: get/set specific mode");
-define_int_property!(LidarTailFilterLevel, "@brief LiDAR: set/get tail filter level");
+define_int_property!(
+    LidarTailFilterLevel,
+    "@brief LiDAR: set/get tail filter level"
+);
 define_int_property!(LidarWarningInfo, "@brief LiDAR: get warning info");
 define_int_property!(LidarWorkMode, "@brief LiDAR: set/get work mode");
 define_bool_property!(
@@ -380,7 +444,8 @@ define_bool_property!(
 define_int_property!(MaxDepth, "@brief Maximum depth threshold");
 define_int_property!(MinDepth, "@brief Minimum depth threshold");
 define_struct_property!(
-    MultiDeviceSyncConfig, OBMultiDeviceSyncConfig,
+    MultiDeviceSyncConfig,
+    OBMultiDeviceSyncConfig,
     "@brief Multi-device synchronization mode and parameter configuration"
 );
 define_int_property!(
@@ -388,14 +453,16 @@ define_int_property!(
     "@brief Read the current network bandwidth type of the network device, whether it is Gigabit Ethernet or Fast Ethernet, such as G335LE."
 );
 define_bool_property!(
-    OnChipCalibrationEnable, "@brief Enable or disable on-chip calibration"
+    OnChipCalibrationEnable,
+    "@brief Enable or disable on-chip calibration"
 );
 define_float_property!(
     OnChipCalibrationHealthCheck,
     "@brief Get the health check result from device,range is [0.0f,1.5f]"
 );
 define_struct_property!(
-    PresetResolutionConfig, OBPresetResolutionConfig,
+    PresetResolutionConfig,
+    OBPresetResolutionConfig,
     "@brief Preset resolution ratio configuration"
 );
 define_bool_property!(PtpClockSyncEnable, "@brief PTP time synchronization enable");
@@ -455,9 +522,13 @@ define_bool_property!(
     "@brief Multi-DeviceSync synchronized signal trigger out is enable state. true: enable, false: disable"
 );
 define_bool_property!(
-    TemperatureCompensation, "@brief Enable/disable temperature compensation"
+    TemperatureCompensation,
+    "@brief Enable/disable temperature compensation"
 );
-define_int_property!(TimerResetDelayUs, "@brief Delay to reset device time, unit: us");
+define_int_property!(
+    TimerResetDelayUs,
+    "@brief Delay to reset device time, unit: us"
+);
 define_bool_property!(TimerResetEnable, "");
 define_bool_property!(TimerResetSignal, "@brief Reset device time to zero");
 define_bool_property!(
@@ -469,8 +540,10 @@ define_int_property!(TimestampOffset, "@brief Timestamp adjustment");
 struct TofExposureThresholdControl;
 define_int_property!(TofFilterRange, "@brief tof filter range configuration");
 define_int_property!(
-    UsbPowerState, "@brief USB's power state, enum type: OBUSBPowerState"
+    UsbPowerState,
+    "@brief USB's power state, enum type: OBUSBPowerState"
 );
 define_bool_property!(
-    Watchdog, "@brief Watchdog function switch, 0: Disable, 1: Enable"
+    Watchdog,
+    "@brief Watchdog function switch, 0: Disable, 1: Enable"
 );

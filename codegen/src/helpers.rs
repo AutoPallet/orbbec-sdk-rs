@@ -99,3 +99,18 @@ pub(crate) fn pretty_print_file(items: proc_macro2::TokenStream) -> String {
         .unwrap();
     prettyplease::unparse(&file)
 }
+
+/// Run `rustfmt --edition 2024` against a generated file in place. The
+/// project is on edition 2024, so anything bindgen / prettyplease emits
+/// must be reformatted with the matching edition or `cargo fmt --check`
+/// in CI flags it as drift.
+pub(crate) fn rustfmt_in_place(path: &std::path::Path) {
+    let status = std::process::Command::new("rustfmt")
+        .args(["--edition", "2024"])
+        .arg(path)
+        .status()
+        .expect("failed to run rustfmt — is it installed in the active toolchain?");
+    if !status.success() {
+        panic!("rustfmt failed for {}", path.display());
+    }
+}

@@ -19,7 +19,7 @@ impl OBFilterConfigSchemaItem {
 
     /// Value type of the configuration item
     pub fn value_type(&self) -> OBFilterConfigValueType {
-        OBFilterConfigValueType::from(self.inner.type_)
+        self.inner.type_
     }
 
     /// Minimum value casted to double
@@ -77,7 +77,11 @@ impl OBFilterConfigSchemaList {
 
     /// Get the config schema item at the specified index
     pub fn get_filter_config_item(&self, index: u32) -> Result<OBFilterConfigSchemaItem, OBError> {
-        let item = call_ob_function!(orb::ob_filter_config_schema_list_get_item, self.inner, index)?;
+        let item = call_ob_function!(
+            orb::ob_filter_config_schema_list_get_item,
+            self.inner,
+            index
+        )?;
         Ok(OBFilterConfigSchemaItem::from(item))
     }
 }
@@ -120,7 +124,12 @@ impl OBFilter {
     /// Set the filter config value by name.
     /// The pass into value type is double, which will be cast to the actual type inside the filter
     pub fn set_config_value(&self, name: &CStr, value: f64) -> Result<(), OBError> {
-        call_ob_function!(orb::ob_filter_set_config_value, self.inner, name.as_ptr(), value)
+        call_ob_function!(
+            orb::ob_filter_set_config_value,
+            self.inner,
+            name.as_ptr(),
+            value
+        )
     }
 
     /// Set the stream profile to which the filter will align to.

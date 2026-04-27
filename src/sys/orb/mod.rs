@@ -3,6 +3,7 @@
 #![allow(non_snake_case)]
 #![allow(missing_docs)]
 #![allow(unused)]
+#![allow(clippy::enum_variant_names)]
 mod bindings;
 
 pub use bindings::*;

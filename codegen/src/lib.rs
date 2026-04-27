@@ -6,7 +6,7 @@ use proc_macro2::{Ident, Span};
 use regex::Regex;
 
 use crate::custom::{VARIANT_RENAMES, struct_value_type};
-use crate::helpers::{compute_trimmed_names, doc_strings, pretty_print_file};
+use crate::helpers::{compute_trimmed_names, doc_strings, pretty_print_file, rustfmt_in_place};
 
 mod custom;
 mod helpers;
@@ -71,9 +71,11 @@ pub fn generate_bindings(args: GenerateArgs) {
     // Write the bindings to file
     let orb_path = args.sys_path.join("orb");
     std::fs::create_dir_all(&orb_path).expect("Failed to create orb directory");
+    let bindings_path = orb_path.join("bindings.rs");
     bindings
-        .write_to_file(orb_path.join("bindings.rs"))
+        .write_to_file(&bindings_path)
         .expect("Couldn't write bindings!");
+    rustfmt_in_place(&bindings_path);
 
     let struct_bindings = get_builder(&args.work_source_dir, &args.target)
         .header("OrbbecSDK/src/shared/InternalTypes.hpp")
@@ -84,9 +86,11 @@ pub fn generate_bindings(args: GenerateArgs) {
 
     let prop_path = args.sys_path.join("prop");
     std::fs::create_dir_all(&prop_path).expect("Failed to create prop directory");
+    let structs_path = prop_path.join("structs.rs");
     struct_bindings
-        .write_to_file(prop_path.join("structs.rs"))
+        .write_to_file(&structs_path)
         .expect("Couldn't write struct bindings!");
+    rustfmt_in_place(&structs_path);
 
     // Now, generate the property_id_types.rs file
     let property_id_types_file = prop_path.join("property_id_types.rs");
@@ -112,8 +116,9 @@ pub fn generate_bindings(args: GenerateArgs) {
         }
 
         let tokens = generate_property_id_types_file(&property_id_types, &doc_comments);
-        std::fs::write(property_id_types_file, pretty_print_file(tokens))
+        std::fs::write(&property_id_types_file, pretty_print_file(tokens))
             .expect("Failed to write property_id_types file");
+        rustfmt_in_place(&property_id_types_file);
     }
 }
 

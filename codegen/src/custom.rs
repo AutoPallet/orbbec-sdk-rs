@@ -16,9 +16,7 @@ pub(crate) fn struct_value_type(name: &str) -> Option<Ident> {
         "BaselineCalibrationParam" => {
             Some(Ident::new("OBBaselineCalibrationParam", Span::call_site()))
         }
-        "ColorAeRoi" | "DepthAeRoi" => {
-            Some(Ident::new("OBRegionOfInterest", Span::call_site()))
-        }
+        "ColorAeRoi" | "DepthAeRoi" => Some(Ident::new("OBRegionOfInterest", Span::call_site())),
         "DeviceSerialNumber" => Some(Ident::new("OBDeviceSerialNumber", Span::call_site())),
         "DeviceTemperature" => Some(Ident::new("OBDeviceTemperature", Span::call_site())),
         "DispOffsetConfig" => Some(Ident::new("OBDispOffsetConfig", Span::call_site())),

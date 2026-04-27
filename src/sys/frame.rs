@@ -63,7 +63,7 @@ impl OBFrame {
 
     /// Get the format of the frame
     pub fn get_format(&self) -> Result<OBFormat, OBError> {
-        Ok(call_ob_function!(orb::ob_frame_get_format, self.inner)?.into())
+        Ok(call_ob_function!(orb::ob_frame_get_format, self.inner)?)
     }
 
     /// Get the depth frame from the frameset.

@@ -139,7 +139,7 @@ impl OBError {
     pub fn exception_type(&self) -> OBExceptionType {
         unsafe {
             let error = &*self.inner;
-            error.exception_type.into()
+            error.exception_type
         }
     }
 

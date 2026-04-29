@@ -8,6 +8,13 @@ pub(crate) const VARIANT_RENAMES: &[(&str, &str)] = &[
         "OB_EXCEPTION_STD_EXCEPTION",
         "OB_EXCEPTION_TYPE_STD_EXCEPTION",
     ),
+    // Capability flag missing the conventional `_BOOL` suffix upstream — it's
+    // only ever queried via `isPropertySupported`, but Bool is the correct
+    // semantic shape so the typed accessor compiles.
+    (
+        "OB_PROP_DEVICE_OFFLINE_AFTER_IP_CONFIG_APPLY",
+        "OB_PROP_DEVICE_OFFLINE_AFTER_IP_CONFIG_APPLY_BOOL",
+    ),
 ];
 
 pub(crate) fn struct_value_type(name: &str) -> Option<Ident> {

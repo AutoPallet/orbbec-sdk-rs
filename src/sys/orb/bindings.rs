@@ -104,6 +104,14 @@ pub const OB_FPS_ANY: u32 = 0;
 pub const OB_PROFILE_DEFAULT: u32 = 0;
 pub const OB_DEFAULT_STRIDE_BYTES: u32 = 0;
 pub const OB_PATH_MAX: u32 = 1024;
+pub const OB_SDK_STATUS_FRAME_DROP_DATA: u32 = 1;
+pub const OB_SDK_STATUS_FRAME_DROP_TIMESTAMP: u32 = 2;
+pub const OB_SDK_STATUS_FRAME_DROP_MATCH: u32 = 4;
+pub const OB_SDK_STATUS_FRAME_QUEUE_OVERFLOW: u32 = 8;
+pub const OB_SDK_STATUS_FRAME_WAIT_TIMEOUT: u32 = 16;
+pub const OB_SDK_STATUS_STREAM_NO_FRAME: u32 = 32;
+pub const OB_NET_IP_FLAG_DHCP: u32 = 1;
+pub const OB_NET_IP_FLAG_PERSISTENT: u32 = 2;
 pub const INVALID_CALLBACK_ID: u32 = 0;
 pub type __u_char = ::std::os::raw::c_uchar;
 pub type __u_short = ::std::os::raw::c_ushort;
@@ -340,18 +348,79 @@ pub enum OBPermissionType {
 }
 #[doc = "@brief the permission type of api or property"]
 pub use self::OBPermissionType as ob_permission_type;
+impl OBErrorCode {
+    pub const ErrorUnknown: OBErrorCode = OBErrorCode::StatusError;
+}
 #[repr(u32)]
 #[non_exhaustive]
 #[doc = "@brief error code"]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub enum OBStatus {
-    #[doc = "status ok"]
-    Ok = 0,
-    #[doc = "status error"]
-    Error = 1,
+pub enum OBErrorCode {
+    #[doc = "Status OK (success)"]
+    StatusOk = 0,
+    #[doc = "Status error (legacy failure)"]
+    StatusError = 1,
+    #[doc = "One or more parameters are invalid"]
+    ErrorInvalidParameter = 100,
+    #[doc = "Data is invalid or corrupted"]
+    ErrorInvalidData = 101,
+    #[doc = "Data length is invalid"]
+    ErrorInvalidDataLen = 102,
+    #[doc = "Target buffer is too small to hold data"]
+    ErrorBufferTooSmall = 103,
+    #[doc = "Memory allocation or access failure"]
+    ErrorMemory = 104,
+    #[doc = "Operation timed out"]
+    ErrorWaitTimeout = 105,
+    #[doc = "Functionality not implemented in SDK"]
+    ErrorNotImplemented = 106,
+    #[doc = "Functionality not implemented in SDK"]
+    ErrorUnsupportedOperation = 107,
+    #[doc = "API called in an invalid order or state"]
+    ErrorWrongApiCallSequence = 108,
+    #[doc = "No available device found"]
+    ErrorNoDevice = 109,
+    #[doc = "Failed to connect to device"]
+    ErrorDeviceConnectFailed = 110,
+    #[doc = "Access to device denied"]
+    ErrorDeviceAccessDenied = 111,
+    #[doc = "Device was disconnected"]
+    ErrorDeviceDisconnected = 112,
+    #[doc = "Device was unavailable"]
+    ErrorDeviceUnavailable = 113,
+    #[doc = "Specified item or component not found"]
+    ErrorItemNotFound = 114,
+    #[doc = "I/O operation failed"]
+    ErrorIoFailure = 115,
+    #[doc = "Resource is busy or locked by another operation"]
+    ErrorResourceBusy = 116,
+    #[doc = "Frame queue overflow"]
+    ErrorFrameQueueOverflow = 200,
+    #[doc = "Frame data is invalid or corrupted"]
+    ErrorFrameData = 201,
+    #[doc = "Frame data length is invalid"]
+    ErrorFrameDataLen = 202,
+    #[doc = "Unknown device error"]
+    ErrorDeviceUnknown = 1000,
+    #[doc = "Device response has invalid magic number"]
+    ErrorDeviceResponseBadMagic = 1001,
+    #[doc = "Device response contains incorrect ID"]
+    ErrorDeviceResponseWrongId = 1002,
+    #[doc = "Device response contains incorrect opcode"]
+    ErrorDeviceResponseWrongOpcode = 1003,
+    #[doc = "Device response has incorrect data size"]
+    ErrorDeviceResponseWrongDataSize = 1004,
+    #[doc = "Device response indicates an error"]
+    ErrorDeviceResponseError = 1005,
+    #[doc = "Device response indicates a warning"]
+    ErrorDeviceResponseWarning = 1006,
+    #[doc = "Device response channel failure, unable to communicate with the device"]
+    ErrorDeviceResponseChannelFailure = 1007,
 }
 #[doc = "@brief error code"]
-pub use self::OBStatus as ob_status;
+pub use self::OBErrorCode as ob_status;
+#[doc = "@brief error code"]
+pub use self::OBErrorCode as ob_error_code;
 #[repr(u32)]
 #[non_exhaustive]
 #[doc = "@brief log level, the higher the level, the stronger the log filter"]
@@ -383,10 +452,11 @@ pub use self::OBDeviceLogSeverityLevel as ob_device_log_severity_level;
 pub enum OBExceptionType {
     #[doc = "Unknown error, an error not clearly defined by the SDK"]
     Unknown = 0,
+    #[doc = "Standard exception, an error caused by the standard library"]
     StdException = 1,
     #[doc = "Camera/Device has been disconnected, the camera/device is not available"]
     CameraDisconnected = 2,
-    #[doc = "An error in the SDK adaptation platform layer, which means an error in the implementation of a specific system\nplatform"]
+    #[doc = "An error in the SDK adaptation platform layer, which means an error in the\nimplementation of a specific system platform"]
     Platform = 3,
     #[doc = "Invalid parameter type exception, need to check input parameter"]
     InvalidValue = 4,
@@ -402,6 +472,14 @@ pub enum OBExceptionType {
     UnsupportedOperation = 9,
     #[doc = "Device access denied"]
     AccessDenied = 10,
+    #[doc = "Camera or Device is not available"]
+    DeviceUnavailable = 11,
+    #[doc = "Runtime data is invalid, check data content or size"]
+    InvalidData = 12,
+    #[doc = "The requested item was not found"]
+    NotFound = 13,
+    #[doc = "Resource is busy or locked by another operation"]
+    ResourceBusy = 14,
 }
 #[doc = "@brief The exception types in the SDK, through the exception type, you can easily determine the specific type of error.\n For detailed error API interface functions and error logs, please refer to the information of ob_error"]
 pub use self::OBExceptionType as ob_exception_type;
@@ -431,6 +509,18 @@ const _: () = {
     ["Offset of field: ob_error::exception_type"]
         [::std::mem::offset_of!(ob_error, exception_type) - 772usize];
 };
+#[repr(u32)]
+#[non_exhaustive]
+#[doc = "@brief GVCP port scheme"]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum OBGvcpPortScheme {
+    #[doc = "Standard GVCP port (3956)"]
+    Standard = 0,
+    #[doc = "Vendor-defined GVCP port scheme"]
+    B = 1,
+}
+#[doc = "@brief GVCP port scheme"]
+pub use self::OBGvcpPortScheme as ob_gvcp_port_scheme;
 #[repr(u32)]
 #[non_exhaustive]
 #[doc = "@brief Enumeration value describing the sensor type"]
@@ -1565,6 +1655,56 @@ pub use self::OBLiDARScanRate as OB_LIDAR_SCAN_RATE;
 pub type OBDeviceState = u64;
 #[doc = "@brief Device state"]
 pub type ob_device_state = u64;
+#[repr(u32)]
+#[non_exhaustive]
+#[doc = "@brief Pipeline issue location flags observed during streaming."]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum OBPipelineIssue {
+    #[doc = "No issue observed"]
+    None = 0,
+    #[doc = "Issue observed in SDK"]
+    Sdk = 1,
+    #[doc = "Issue observed in driver"]
+    Driver = 2,
+    #[doc = "Issue observed in device firmware"]
+    Fw = 4,
+    #[doc = "Issue observed in device hardware"]
+    Hw = 8,
+}
+#[doc = "@brief Pipeline issue location flags observed during streaming."]
+pub use self::OBPipelineIssue as ob_pipeline_issue;
+#[doc = "@brief Pipeline status observed during streaming."]
+#[repr(C, packed)]
+#[derive(Debug, Copy, Clone)]
+pub struct OBPipelineStatus {
+    #[doc = "Issue location flags"]
+    pub issue: OBPipelineIssue,
+    #[doc = "SDK-defined bitmask composed of OB_SDK_STATUS_* macros"]
+    pub sdk_status: u64,
+    #[doc = "Device-specific diagnostic bits (not for application logic)"]
+    pub dev_status: u64,
+    #[doc = "Driver-specific diagnostic bits (not for application logic)"]
+    pub drv_status: u64,
+    #[doc = "Reserved for future use"]
+    pub reserved: [u64; 3usize],
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of OBPipelineStatus"][::std::mem::size_of::<OBPipelineStatus>() - 52usize];
+    ["Alignment of OBPipelineStatus"][::std::mem::align_of::<OBPipelineStatus>() - 1usize];
+    ["Offset of field: OBPipelineStatus::issue"]
+        [::std::mem::offset_of!(OBPipelineStatus, issue) - 0usize];
+    ["Offset of field: OBPipelineStatus::sdk_status"]
+        [::std::mem::offset_of!(OBPipelineStatus, sdk_status) - 4usize];
+    ["Offset of field: OBPipelineStatus::dev_status"]
+        [::std::mem::offset_of!(OBPipelineStatus, dev_status) - 12usize];
+    ["Offset of field: OBPipelineStatus::drv_status"]
+        [::std::mem::offset_of!(OBPipelineStatus, drv_status) - 20usize];
+    ["Offset of field: OBPipelineStatus::reserved"]
+        [::std::mem::offset_of!(OBPipelineStatus, reserved) - 28usize];
+};
+#[doc = "@brief Pipeline status observed during streaming."]
+pub type ob_pipeline_status = OBPipelineStatus;
 #[doc = "@brief Temperature parameters of the device (unit: Celsius)"]
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
@@ -2240,33 +2380,6 @@ pub enum OBEdgeNoiseRemovalType {
     MgcFilter = 3,
 }
 pub use self::OBEdgeNoiseRemovalType as ob_edge_noise_removal_type;
-#[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
-pub struct OBEdgeNoiseRemovalFilterParams {
-    pub type_: OBEdgeNoiseRemovalType,
-    pub margin_left_th: u16,
-    pub margin_right_th: u16,
-    pub margin_top_th: u16,
-    pub margin_bottom_th: u16,
-}
-#[allow(clippy::unnecessary_operation, clippy::identity_op)]
-const _: () = {
-    ["Size of OBEdgeNoiseRemovalFilterParams"]
-        [::std::mem::size_of::<OBEdgeNoiseRemovalFilterParams>() - 12usize];
-    ["Alignment of OBEdgeNoiseRemovalFilterParams"]
-        [::std::mem::align_of::<OBEdgeNoiseRemovalFilterParams>() - 1usize];
-    ["Offset of field: OBEdgeNoiseRemovalFilterParams::type_"]
-        [::std::mem::offset_of!(OBEdgeNoiseRemovalFilterParams, type_) - 0usize];
-    ["Offset of field: OBEdgeNoiseRemovalFilterParams::margin_left_th"]
-        [::std::mem::offset_of!(OBEdgeNoiseRemovalFilterParams, margin_left_th) - 4usize];
-    ["Offset of field: OBEdgeNoiseRemovalFilterParams::margin_right_th"]
-        [::std::mem::offset_of!(OBEdgeNoiseRemovalFilterParams, margin_right_th) - 6usize];
-    ["Offset of field: OBEdgeNoiseRemovalFilterParams::margin_top_th"]
-        [::std::mem::offset_of!(OBEdgeNoiseRemovalFilterParams, margin_top_th) - 8usize];
-    ["Offset of field: OBEdgeNoiseRemovalFilterParams::margin_bottom_th"]
-        [::std::mem::offset_of!(OBEdgeNoiseRemovalFilterParams, margin_bottom_th) - 10usize];
-};
-pub type ob_edge_noise_removal_filter_params = OBEdgeNoiseRemovalFilterParams;
 #[repr(u32)]
 #[non_exhaustive]
 #[doc = "@brief Denoising method"]
@@ -2298,6 +2411,126 @@ const _: () = {
         [::std::mem::offset_of!(OBNoiseRemovalFilterParams, type_) - 4usize];
 };
 pub type ob_noise_removal_filter_params = OBNoiseRemovalFilterParams;
+#[repr(C, packed)]
+#[derive(Debug, Copy, Clone)]
+pub struct OBEdgeNoiseRemovalFilterParams {
+    #[doc = "Horizontal threshold settings"]
+    pub margin_x_th: ::std::os::raw::c_int,
+    #[doc = "Vertical threshold settings"]
+    pub margin_y_th: ::std::os::raw::c_int,
+    #[doc = "Maximum horizontal threshold"]
+    pub limit_x_th: ::std::os::raw::c_int,
+    #[doc = "Maximum vertical threshold"]
+    pub limit_y_th: ::std::os::raw::c_int,
+    #[doc = "Image width"]
+    pub width: u32,
+    #[doc = "Image height"]
+    pub height: u32,
+    #[doc = "Set to true for horizontal and vertical, false for horizontal only"]
+    pub enable_direction: bool,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of OBEdgeNoiseRemovalFilterParams"]
+        [::std::mem::size_of::<OBEdgeNoiseRemovalFilterParams>() - 25usize];
+    ["Alignment of OBEdgeNoiseRemovalFilterParams"]
+        [::std::mem::align_of::<OBEdgeNoiseRemovalFilterParams>() - 1usize];
+    ["Offset of field: OBEdgeNoiseRemovalFilterParams::margin_x_th"]
+        [::std::mem::offset_of!(OBEdgeNoiseRemovalFilterParams, margin_x_th) - 0usize];
+    ["Offset of field: OBEdgeNoiseRemovalFilterParams::margin_y_th"]
+        [::std::mem::offset_of!(OBEdgeNoiseRemovalFilterParams, margin_y_th) - 4usize];
+    ["Offset of field: OBEdgeNoiseRemovalFilterParams::limit_x_th"]
+        [::std::mem::offset_of!(OBEdgeNoiseRemovalFilterParams, limit_x_th) - 8usize];
+    ["Offset of field: OBEdgeNoiseRemovalFilterParams::limit_y_th"]
+        [::std::mem::offset_of!(OBEdgeNoiseRemovalFilterParams, limit_y_th) - 12usize];
+    ["Offset of field: OBEdgeNoiseRemovalFilterParams::width"]
+        [::std::mem::offset_of!(OBEdgeNoiseRemovalFilterParams, width) - 16usize];
+    ["Offset of field: OBEdgeNoiseRemovalFilterParams::height"]
+        [::std::mem::offset_of!(OBEdgeNoiseRemovalFilterParams, height) - 20usize];
+    ["Offset of field: OBEdgeNoiseRemovalFilterParams::enable_direction"]
+        [::std::mem::offset_of!(OBEdgeNoiseRemovalFilterParams, enable_direction) - 24usize];
+};
+pub type ob_edge_noise_removal_filter_params = OBEdgeNoiseRemovalFilterParams;
+#[doc = "@brief Configuration parameters for the MGC noise removal filter"]
+#[repr(C, packed)]
+#[derive(Debug, Copy, Clone)]
+pub struct OBMgcNoiseRemovalFilterParams {
+    #[doc = "Left chamfer threshold settings"]
+    pub max_width_left: ::std::os::raw::c_int,
+    #[doc = "Right chamfer threshold settings"]
+    pub max_width_right: ::std::os::raw::c_int,
+    #[doc = "Chamfer radius threshold settings"]
+    pub max_radius: ::std::os::raw::c_int,
+    #[doc = "Horizontal threshold settings"]
+    pub margin_x_th: ::std::os::raw::c_int,
+    #[doc = "Vertical threshold settings"]
+    pub margin_y_th: ::std::os::raw::c_int,
+    #[doc = "Maximum horizontal threshold"]
+    pub limit_x_th: ::std::os::raw::c_int,
+    #[doc = "Maximum vertical threshold"]
+    pub limit_y_th: ::std::os::raw::c_int,
+    #[doc = "Depth map width the above parameters correspond to"]
+    pub width: u32,
+    #[doc = "Depth map height the above parameters correspond to"]
+    pub height: u32,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of OBMgcNoiseRemovalFilterParams"]
+        [::std::mem::size_of::<OBMgcNoiseRemovalFilterParams>() - 36usize];
+    ["Alignment of OBMgcNoiseRemovalFilterParams"]
+        [::std::mem::align_of::<OBMgcNoiseRemovalFilterParams>() - 1usize];
+    ["Offset of field: OBMgcNoiseRemovalFilterParams::max_width_left"]
+        [::std::mem::offset_of!(OBMgcNoiseRemovalFilterParams, max_width_left) - 0usize];
+    ["Offset of field: OBMgcNoiseRemovalFilterParams::max_width_right"]
+        [::std::mem::offset_of!(OBMgcNoiseRemovalFilterParams, max_width_right) - 4usize];
+    ["Offset of field: OBMgcNoiseRemovalFilterParams::max_radius"]
+        [::std::mem::offset_of!(OBMgcNoiseRemovalFilterParams, max_radius) - 8usize];
+    ["Offset of field: OBMgcNoiseRemovalFilterParams::margin_x_th"]
+        [::std::mem::offset_of!(OBMgcNoiseRemovalFilterParams, margin_x_th) - 12usize];
+    ["Offset of field: OBMgcNoiseRemovalFilterParams::margin_y_th"]
+        [::std::mem::offset_of!(OBMgcNoiseRemovalFilterParams, margin_y_th) - 16usize];
+    ["Offset of field: OBMgcNoiseRemovalFilterParams::limit_x_th"]
+        [::std::mem::offset_of!(OBMgcNoiseRemovalFilterParams, limit_x_th) - 20usize];
+    ["Offset of field: OBMgcNoiseRemovalFilterParams::limit_y_th"]
+        [::std::mem::offset_of!(OBMgcNoiseRemovalFilterParams, limit_y_th) - 24usize];
+    ["Offset of field: OBMgcNoiseRemovalFilterParams::width"]
+        [::std::mem::offset_of!(OBMgcNoiseRemovalFilterParams, width) - 28usize];
+    ["Offset of field: OBMgcNoiseRemovalFilterParams::height"]
+        [::std::mem::offset_of!(OBMgcNoiseRemovalFilterParams, height) - 32usize];
+};
+#[doc = "@brief Configuration parameters for the MGC noise removal filter"]
+pub type ob_mgc_noise_removal_filter_params = OBMgcNoiseRemovalFilterParams;
+#[doc = "@brief Configuration parameters for the LUT noise removal filter"]
+#[repr(C, packed)]
+#[derive(Debug, Copy, Clone)]
+pub struct OBLutNoiseRemovalFilterParams {
+    #[doc = "LUT max size of noise pixels (4x4 LUT, 16 entries total)"]
+    pub max_lut: [u16; 16usize],
+    #[doc = "Difference threshold between neighbor pixels"]
+    pub min_diff: u16,
+    #[doc = "Depth map width the above parameters correspond to"]
+    pub width: u32,
+    #[doc = "Depth map height the above parameters correspond to"]
+    pub height: u32,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of OBLutNoiseRemovalFilterParams"]
+        [::std::mem::size_of::<OBLutNoiseRemovalFilterParams>() - 42usize];
+    ["Alignment of OBLutNoiseRemovalFilterParams"]
+        [::std::mem::align_of::<OBLutNoiseRemovalFilterParams>() - 1usize];
+    ["Offset of field: OBLutNoiseRemovalFilterParams::max_lut"]
+        [::std::mem::offset_of!(OBLutNoiseRemovalFilterParams, max_lut) - 0usize];
+    ["Offset of field: OBLutNoiseRemovalFilterParams::min_diff"]
+        [::std::mem::offset_of!(OBLutNoiseRemovalFilterParams, min_diff) - 32usize];
+    ["Offset of field: OBLutNoiseRemovalFilterParams::width"]
+        [::std::mem::offset_of!(OBLutNoiseRemovalFilterParams, width) - 34usize];
+    ["Offset of field: OBLutNoiseRemovalFilterParams::height"]
+        [::std::mem::offset_of!(OBLutNoiseRemovalFilterParams, height) - 38usize];
+};
+#[doc = "@brief Configuration parameters for the LUT noise removal filter"]
+pub type ob_lut_noise_removal_filter_params = OBLutNoiseRemovalFilterParams;
 #[doc = "@brief Control command protocol version number"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -2341,7 +2574,7 @@ pub enum OBCmdVersion {
 }
 #[doc = "@brief Command version associated with property id"]
 pub use self::OBCmdVersion as ob_cmd_version;
-#[doc = "@brief IP address configuration for network devices (IPv4)"]
+#[doc = "@brief IP address configuration for network devices (IPv4), used with property OB_STRUCT_DEVICE_IP_ADDR_CONFIG.\n\n @note Device support:\n   - Femto Mega / Femto Mega I: only this structure is supported.\n   - Gemini 335Le / Gemini 435Le with older firmware: only this structure is supported.\n   - Gemini 335Le / Gemini 435Le with newer firmware: both this structure and @ref OBNetIpConfigV2 are supported;\n     it is recommended to use @ref OBNetIpConfigV2 (property OB_STRUCT_DEVICE_IP_ADDR_CONFIG_V2) instead.\n\n @note How to choose between OBNetIpConfig and OBNetIpConfigV2:\n   First check whether OB_STRUCT_DEVICE_IP_ADDR_CONFIG_V2 is supported by the device. If yes, use @ref OBNetIpConfigV2;\n   otherwise fall back to this structure.\n   Example:\n   @code\n   bool v2Supported = ob_device_is_property_supported(dev, OB_STRUCT_DEVICE_IP_ADDR_CONFIG_V2,\n                                                       OB_PERMISSION_READ_WRITE, &error);\n   if(v2Supported) {\n       // Use OBNetIpConfigV2 with OB_STRUCT_DEVICE_IP_ADDR_CONFIG_V2\n   } else {\n       // Use OBNetIpConfig with OB_STRUCT_DEVICE_IP_ADDR_CONFIG\n   }\n   @endcode"]
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
 pub struct OBNetIpConfig {
@@ -2365,10 +2598,40 @@ const _: () = {
     ["Offset of field: OBNetIpConfig::gateway"]
         [::std::mem::offset_of!(OBNetIpConfig, gateway) - 10usize];
 };
-#[doc = "@brief IP address configuration for network devices (IPv4)"]
+#[doc = "@brief IP address configuration for network devices (IPv4), used with property OB_STRUCT_DEVICE_IP_ADDR_CONFIG.\n\n @note Device support:\n   - Femto Mega / Femto Mega I: only this structure is supported.\n   - Gemini 335Le / Gemini 435Le with older firmware: only this structure is supported.\n   - Gemini 335Le / Gemini 435Le with newer firmware: both this structure and @ref OBNetIpConfigV2 are supported;\n     it is recommended to use @ref OBNetIpConfigV2 (property OB_STRUCT_DEVICE_IP_ADDR_CONFIG_V2) instead.\n\n @note How to choose between OBNetIpConfig and OBNetIpConfigV2:\n   First check whether OB_STRUCT_DEVICE_IP_ADDR_CONFIG_V2 is supported by the device. If yes, use @ref OBNetIpConfigV2;\n   otherwise fall back to this structure.\n   Example:\n   @code\n   bool v2Supported = ob_device_is_property_supported(dev, OB_STRUCT_DEVICE_IP_ADDR_CONFIG_V2,\n                                                       OB_PERMISSION_READ_WRITE, &error);\n   if(v2Supported) {\n       // Use OBNetIpConfigV2 with OB_STRUCT_DEVICE_IP_ADDR_CONFIG_V2\n   } else {\n       // Use OBNetIpConfig with OB_STRUCT_DEVICE_IP_ADDR_CONFIG\n   }\n   @endcode"]
 pub type ob_net_ip_config = OBNetIpConfig;
-#[doc = "@brief IP address configuration for network devices (IPv4)"]
+#[doc = "@brief IP address configuration for network devices (IPv4), used with property OB_STRUCT_DEVICE_IP_ADDR_CONFIG.\n\n @note Device support:\n   - Femto Mega / Femto Mega I: only this structure is supported.\n   - Gemini 335Le / Gemini 435Le with older firmware: only this structure is supported.\n   - Gemini 335Le / Gemini 435Le with newer firmware: both this structure and @ref OBNetIpConfigV2 are supported;\n     it is recommended to use @ref OBNetIpConfigV2 (property OB_STRUCT_DEVICE_IP_ADDR_CONFIG_V2) instead.\n\n @note How to choose between OBNetIpConfig and OBNetIpConfigV2:\n   First check whether OB_STRUCT_DEVICE_IP_ADDR_CONFIG_V2 is supported by the device. If yes, use @ref OBNetIpConfigV2;\n   otherwise fall back to this structure.\n   Example:\n   @code\n   bool v2Supported = ob_device_is_property_supported(dev, OB_STRUCT_DEVICE_IP_ADDR_CONFIG_V2,\n                                                       OB_PERMISSION_READ_WRITE, &error);\n   if(v2Supported) {\n       // Use OBNetIpConfigV2 with OB_STRUCT_DEVICE_IP_ADDR_CONFIG_V2\n   } else {\n       // Use OBNetIpConfig with OB_STRUCT_DEVICE_IP_ADDR_CONFIG\n   }\n   @endcode"]
 pub type DEVICE_IP_ADDR_CONFIG = OBNetIpConfig;
+#[doc = "@brief IP address configuration v2 for network devices (IPv4), used with property OB_STRUCT_DEVICE_IP_ADDR_CONFIG_V2.\n\n @note This is the recommended structure for Gemini 335Le / Gemini 435Le devices with newer firmware.\n       It extends @ref OBNetIpConfig by replacing the single @c dhcp field with a @c flags bitmask that supports\n       both DHCP mode and Persistent IP mode.\n\n @note Device support:\n   - Femto Mega / Femto Mega I: NOT supported; use @ref OBNetIpConfig instead.\n   - Gemini 335Le / Gemini 435Le with older firmware: NOT supported; use @ref OBNetIpConfig instead.\n   - Gemini 335Le / Gemini 435Le with newer firmware: supported and recommended.\n\n @note Before using this structure, verify support at runtime:\n   @code\n   bool v2Supported = ob_device_is_property_supported(dev, OB_STRUCT_DEVICE_IP_ADDR_CONFIG_V2,\n                                                       OB_PERMISSION_READ_WRITE, &error);\n   @endcode"]
+#[repr(C, packed)]
+#[derive(Debug, Copy, Clone)]
+pub struct OBNetIpConfigV2 {
+    #[doc = "IP configuration mode flags\n< bit0: DHCP enable (1=on, 0=off)\n< bit1: Persistent IP enable (1=on, 0=off)\n< bit[2:15]: reserved, must be 0"]
+    pub flags: u16,
+    #[doc = "IP address (IPv4, big-endian, e.g. 192.168.1.1 -> address[0]=192)"]
+    pub address: [u8; 4usize],
+    #[doc = "Subnet mask (big-endian)"]
+    pub mask: [u8; 4usize],
+    #[doc = "Gateway (big-endian)"]
+    pub gateway: [u8; 4usize],
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of OBNetIpConfigV2"][::std::mem::size_of::<OBNetIpConfigV2>() - 14usize];
+    ["Alignment of OBNetIpConfigV2"][::std::mem::align_of::<OBNetIpConfigV2>() - 1usize];
+    ["Offset of field: OBNetIpConfigV2::flags"]
+        [::std::mem::offset_of!(OBNetIpConfigV2, flags) - 0usize];
+    ["Offset of field: OBNetIpConfigV2::address"]
+        [::std::mem::offset_of!(OBNetIpConfigV2, address) - 2usize];
+    ["Offset of field: OBNetIpConfigV2::mask"]
+        [::std::mem::offset_of!(OBNetIpConfigV2, mask) - 6usize];
+    ["Offset of field: OBNetIpConfigV2::gateway"]
+        [::std::mem::offset_of!(OBNetIpConfigV2, gateway) - 10usize];
+};
+#[doc = "@brief IP address configuration v2 for network devices (IPv4), used with property OB_STRUCT_DEVICE_IP_ADDR_CONFIG_V2.\n\n @note This is the recommended structure for Gemini 335Le / Gemini 435Le devices with newer firmware.\n       It extends @ref OBNetIpConfig by replacing the single @c dhcp field with a @c flags bitmask that supports\n       both DHCP mode and Persistent IP mode.\n\n @note Device support:\n   - Femto Mega / Femto Mega I: NOT supported; use @ref OBNetIpConfig instead.\n   - Gemini 335Le / Gemini 435Le with older firmware: NOT supported; use @ref OBNetIpConfig instead.\n   - Gemini 335Le / Gemini 435Le with newer firmware: supported and recommended.\n\n @note Before using this structure, verify support at runtime:\n   @code\n   bool v2Supported = ob_device_is_property_supported(dev, OB_STRUCT_DEVICE_IP_ADDR_CONFIG_V2,\n                                                       OB_PERMISSION_READ_WRITE, &error);\n   @endcode"]
+pub type ob_net_ip_config_v2 = OBNetIpConfigV2;
+#[doc = "@brief IP address configuration v2 for network devices (IPv4), used with property OB_STRUCT_DEVICE_IP_ADDR_CONFIG_V2.\n\n @note This is the recommended structure for Gemini 335Le / Gemini 435Le devices with newer firmware.\n       It extends @ref OBNetIpConfig by replacing the single @c dhcp field with a @c flags bitmask that supports\n       both DHCP mode and Persistent IP mode.\n\n @note Device support:\n   - Femto Mega / Femto Mega I: NOT supported; use @ref OBNetIpConfig instead.\n   - Gemini 335Le / Gemini 435Le with older firmware: NOT supported; use @ref OBNetIpConfig instead.\n   - Gemini 335Le / Gemini 435Le with newer firmware: supported and recommended.\n\n @note Before using this structure, verify support at runtime:\n   @code\n   bool v2Supported = ob_device_is_property_supported(dev, OB_STRUCT_DEVICE_IP_ADDR_CONFIG_V2,\n                                                       OB_PERMISSION_READ_WRITE, &error);\n   @endcode"]
+pub type DEVICE_IP_ADDR_CONFIG_V2 = OBNetIpConfigV2;
 #[repr(u32)]
 #[non_exhaustive]
 #[doc = "@brief Device communication mode"]
@@ -2902,7 +3165,7 @@ pub enum OBIntraCameraSyncReference {
 }
 #[repr(u32)]
 #[non_exhaustive]
-#[doc = "@brief Device access mode for GigE network device"]
+#[doc = "@brief Device access mode for GVCP device"]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum OBDeviceAccessMode {
     #[doc = "No access. This value is only used as a return value"]
@@ -2915,6 +3178,19 @@ pub enum OBDeviceAccessMode {
     MonitorAccess = 3,
     #[doc = "Default access: control access for capable devices, ignored otherwise"]
     DefaultAccess = 4,
+}
+#[repr(u32)]
+#[non_exhaustive]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum OBIpSourceType {
+    #[doc = "No IP configuration active (e.g. USB device)."]
+    None = 0,
+    #[doc = "LLA (Link-Local Address / Auto IP)."]
+    Lla = 1,
+    #[doc = "DHCP (Dynamic Host Configuration Protocol)."]
+    Dhcp = 2,
+    #[doc = "Persistent IP (Static IP stored in memory)."]
+    Persistent = 3,
 }
 #[doc = "@brief Callback for file transfer\n\n @param[in] state Transmission status\n @param[in] message Transfer status information\n @param[in] percent Transfer progress percentage\n @param[in] user_data User-defined data"]
 pub type ob_file_send_callback = ::std::option::Option<
@@ -2990,8 +3266,13 @@ pub type ob_log_callback = ::std::option::Option<
         user_data: *mut ::std::os::raw::c_void,
     ),
 >;
+#[doc = "@brief Callback for playback status notification\n\n @param[in] status Playback status\n @param[in] user_data User-defined data"]
 pub type ob_playback_status_changed_callback = ::std::option::Option<
     unsafe extern "C" fn(status: OBPlaybackStatus, user_data: *mut ::std::os::raw::c_void),
+>;
+#[doc = "@brief Callback for pipeline status notification\n\n @param[in] status Pipeline status\n @param[in] user_data User-defined data"]
+pub type ob_pipeline_status_callback = ::std::option::Option<
+    unsafe extern "C" fn(status: ob_pipeline_status, user_data: *mut ::std::os::raw::c_void),
 >;
 #[doc = "@brief Callback Id"]
 pub type OBCallbackId = u64;
@@ -3028,12 +3309,27 @@ unsafe extern "C" {
     );
 }
 unsafe extern "C" {
-    #[doc = "@brief \"Force\" a static IP address configuration in a device identified by its MAC Address.\n\n @param[in] macAddress MAC address of the network device.\n                       You can obtain it from @ref ob_device_info_get_uid, or specify it manually\n                       in the format xx:xx:xx:xx:xx:xx, where each xx is a two-digit hexadecimal value.\n @param[in] config The new IP configuration.\n @param[out] error Pointer to an error object that will be populated if an error occurs.\n\n @return bool true if the configuration command was processed successfully, false otherwise.\n\n @note This applies to all GigE Vision devices"]
+    #[doc = "@brief \"Force\" a static IP address configuration in a device identified by its MAC Address.\n\n @param[in] macAddress MAC address of the network device.\n                       You can obtain it from @ref ob_device_info_get_uid, or specify it manually\n                       in the format xx:xx:xx:xx:xx:xx, where each xx is a two-digit hexadecimal value.\n @param[in] config The new IP configuration.\n @param[out] error Pointer to an error object that will be populated if an error occurs.\n\n @return bool true if the configuration command was processed successfully, false otherwise.\n @note This applies to all GVCP devices"]
     pub fn ob_force_ip_config(
         macAddress: *const ::std::os::raw::c_char,
         config: ob_net_ip_config,
         error: *mut *mut ob_error,
     ) -> bool;
+}
+unsafe extern "C" {
+    #[doc = "@brief Set the GVCP port scheme used for network device discovery and control.\n\n @param[in] context Pointer to the context object.\n @param[in] scheme Target GVCP port scheme.\n                   Return error if the specified scheme is invalid or unsupported.\n @param[out] error Pointer to an error object that will be populated if an error occurs.\n\n @note This change affects only the current session and is not persisted.\n @note Switching to a different scheme will force disconnection of all currently connected network devices."]
+    pub fn ob_set_gvcp_port_scheme(
+        context: *mut ob_context,
+        scheme: ob_gvcp_port_scheme,
+        error: *mut *mut ob_error,
+    );
+}
+unsafe extern "C" {
+    #[doc = "@brief Get the current GVCP port scheme.\n\n @param[in] context Pointer to the context object\n @param[out] error Pointer to an error object that will be populated if an error occurs.\n\n @return Current GVCP port scheme."]
+    pub fn ob_get_gvcp_port_scheme(
+        context: *mut ob_context,
+        error: *mut *mut ob_error,
+    ) -> ob_gvcp_port_scheme;
 }
 unsafe extern "C" {
     #[doc = "@brief Create a network device object\n\n @param[in] context Pointer to the context object\n @param[in] address IP address of the device\n @param[in] port Port number of the device\n @param[out] error Pointer to an error object that will be populated if an error occurs during device creation\n\n @return Pointer to the created device object"]
@@ -3242,7 +3538,7 @@ pub enum OBPropertyID {
     DeviceWorkMode = 95,
     #[doc = "@brief Device communication type, 0: USB; 1: Ethernet(RTSP)"]
     DeviceCommunicationType = 97,
-    #[doc = "@brief Switch infrared imaging mode, 0: active IR mode, 1: passive IR mode"]
+    #[doc = "@brief Switch infrared imaging mode, 0: positive IR mode, 1: passive IR mode"]
     SwitchIrMode = 98,
     #[doc = "@brief Laser power level"]
     LaserPowerLevelControl = 99,
@@ -3385,6 +3681,14 @@ pub enum OBPropertyID {
     ColorLeftFlip = 253,
     #[doc = "@brief Color camera preset priority"]
     ColorPresetPriority = 255,
+    #[doc = "@brief LLA (Link Local Address) switch\n\n @deprecated The property is deprecated"]
+    DeviceNetworkLla = 257,
+    #[doc = "@brief Color anti-flicker switch"]
+    ColorAntiFlicker = 259,
+    #[doc = "@brief Device IP mode\n @param value\n   - 0: AMR Sensor Mode.\n        Typically configured for ehternet interface sensors for AMRs.\n        When DHCP is enabled and the device fails to obtain a valid IP address, it falls back to Persistent IP.\n        If neither of Persistent IP and DHCP is specified, Persistent IP is enabled by default.\n\n   - 1: Industrial Sensor Mode.\n        Typically configured for ehternet interface sensors for industrial applications.\n        When DHCP is enabled and the device fails to obtain a valid IP address, it falls back to LLA (Link-Local Address).\n        If Persistent IP and DHCP are both enabled, the sensor starts with the attemp to used the specified persistent IP\n        and falls back to DHCP if Persistent IP fails."]
+    DeviceIpMode = 260,
+    #[doc = "@brief DHCP assign IP timeout, unit: second"]
+    DhcpAssignIpTimeout = 261,
     #[doc = "@brief Baseline calibration parameters"]
     BaselineCalibrationParam = 1002,
     #[doc = "@brief Device temperature information"]
@@ -3399,13 +3703,13 @@ pub enum OBPropertyID {
     MultiDeviceSyncConfig = 1038,
     #[doc = "@brief RGB cropping ROI"]
     RgbCropRoi = 1040,
-    #[doc = "@brief Device IP address configuration"]
+    #[doc = "@brief Device IP address configuration\n @see OBNetIpConfig"]
     DeviceIpAddrConfig = 1041,
     #[doc = "@brief The current camera depth mode"]
     CurrentDepthAlgMode = 1043,
     #[doc = "@brief A list of depth accuracy levels, returning an array of uin16_t, corresponding to the enumeration"]
     DepthPrecisionSupportList = 1045,
-    #[doc = "@brief Device network static ip config record\n @brief Using for get last static ip config, witch is record in device flash when user set static ip config\n\n @attention read only"]
+    #[doc = "@brief Device network static ip config record\n @brief Using for get last static ip config, witch is record in device flash when user set static ip config\n @see OBNetIpConfig\n\n @attention read only"]
     DeviceStaticIpConfigRecord = 1053,
     #[doc = "@brief Using to configure the depth sensor's HDR mode\n @brief The Value type is @ref OBHdrConfig\n\n @attention After enable HDR mode, the depth sensor auto exposure will be disabled."]
     DepthHdrConfig = 1059,
@@ -3421,6 +3725,8 @@ pub enum OBPropertyID {
     PresetResolutionConfig = 1069,
     #[doc = "@brief Color sensor synchronized exposure parameter structure"]
     ColorSyncedExposureParam = 1077,
+    #[doc = "@brief Device IP address configuration v2\n @see OBNetIpConfigV2"]
+    DeviceIpAddrConfigV2 = 1088,
     #[doc = "@brief Color camera auto exposure"]
     ColorAutoExposure = 2000,
     #[doc = "@brief Color camera exposure adjustment"]
@@ -3469,8 +3775,8 @@ pub enum OBPropertyID {
     IrChannelDataSource = 2028,
     #[doc = "@brief Depth effect dedistortion, true: on, false: off. mutually exclusive with D2C function, RM_Filter disable When hardware or software D2C is enabled."]
     DepthRmFilter = 2029,
-    #[doc = "@brief Color camera maximal gain"]
-    ColorMaximalGain = 2030,
+    #[doc = "@brief Color AE max gain"]
+    ColorAeMaxGain = 2030,
     #[doc = "@brief Color camera shutter gain"]
     ColorMaximalShutter = 2031,
     #[doc = "@brief The enable/disable switch for IR short exposure function, supported only by a few devices."]
@@ -3515,6 +3821,8 @@ pub enum OBPropertyID {
     DebugEsgmConfidence = 5013,
     #[doc = "@brief Color camera CCI denoising level. 0: Auto; 1-8: higher values indicate stronger denoising.\n @note This setting has no effect when AE (Auto Exposure) is disabled."]
     ColorDenoisingLevel = 5525,
+    #[doc = "@brief Indicates whether the device will go offline after applying IP configuration.\n This property does not represent an actual command; it is a capability flag only,\n used to identify whether the current device has the behavior of going offline after IP config is applied."]
+    DeviceOfflineAfterIpConfigApply = 5555,
     LidarIpAddress = 8000,
     #[doc = "@brief LiDAR: set/get port"]
     LidarPort = 8001,
@@ -4117,6 +4425,14 @@ unsafe extern "C" {
     );
 }
 unsafe extern "C" {
+    #[doc = "@brief Enable or disable the device firmware log.\n\n @param[in] device The device object.\n @param[in] enable Whether to enable the firmware log.\n @param[out] error Pointer to an error object that will be set if an error occurs."]
+    pub fn ob_device_enable_firmware_log(
+        device: *mut ob_device,
+        enable: bool,
+        error: *mut *mut ob_error,
+    );
+}
+unsafe extern "C" {
     #[doc = "@brief Send data to the device and receive data from the device.\n @brief This is a factory and debug function, which can be used to send and receive data from the device. The data format is secret and belongs to the device\n vendor.\n\n @param[in] device The device object.\n @param[in] send_data The data to be sent to the device.\n @param[in] send_data_size The size of the data to be sent to the device.\n @param[out] receive_data The data received from the device.\n @param[in,out] receive_data_size Pass in the expected size of the receive data, and return the actual size of the received data.\n @param[out] error Pointer to an error object that will be set if an error occurs."]
     pub fn ob_device_send_and_receive_data(
         device: *mut ob_device,
@@ -4359,6 +4675,30 @@ unsafe extern "C" {
 unsafe extern "C" {
     #[doc = "@brief Get the gateway of the host network interface corresponding to the network device.\n\n @attention Only valid for network devices. Returns \"0.0.0.0\" for non-network devices.\n\n @param[in] list Device list object\n @param[in] index Device index\n @param[out] error Pointer to an error object that will be set if an error occurs.\n\n @return const char* The gateway of the host network interface associated with the device."]
     pub fn ob_device_list_get_device_local_gateway(
+        list: *const ob_device_list,
+        index: u32,
+        error: *mut *mut ob_error,
+    ) -> *const ::std::os::raw::c_char;
+}
+unsafe extern "C" {
+    #[doc = "@brief Get the name of the host network interface corresponding to the device.\n\n @attention Primarily for network devices. Returns \"unknown\" for USB or other non-network devices.\n\n @param[in] list Device list object.\n @param[in] index Device index.\n @param[out] error Pointer to an error object that will be set if an error occurs.\n\n @return const char* The host network interface name (e.g., \"eth0\", \"en0\"). Returns \"unknown\" for non-network devices."]
+    pub fn ob_device_list_get_device_local_net_if_name(
+        list: *const ob_device_list,
+        index: u32,
+        error: *mut *mut ob_error,
+    ) -> *const ::std::os::raw::c_char;
+}
+unsafe extern "C" {
+    #[doc = "@brief Get the current GVCP IP configuration status of the device at the specified index.\n\n @attention This function is valid primarily for Ethernet Vision devices.\n For non-Ethernet devices (e.g., USB), it will return OB_IP_SOURCE_NONE.\n\n @param[in] list The device list object.\n @param[in] index The index of the device in the list.\n @param[out] error Pointer to an error object that will be set if an error occurs.\n\n @return The active IP configuration mode (e.g., DHCP, LLA, Persistent IP).\n Returns OB_IP_SOURCE_NONE if the device is not a Ethernet device."]
+    pub fn ob_device_list_get_device_ip_source_type(
+        list: *const ob_device_list,
+        index: u32,
+        error: *mut *mut ob_error,
+    ) -> OBIpSourceType;
+}
+unsafe extern "C" {
+    #[doc = "@brief Get the user-defined name of the device at the specified index.\n\n @attention This function is valid primarily for Ethernet Vision devices.\n For non-Ethernet devices (e.g., USB), it will return \"unknown\".\n\n @param[in] list The device list object.\n @param[in] index The index of the device in the list.\n @param[out] error Pointer to an error object that will be set if an error occurs.\n\n @return const char* The user-defined name string. Returns \"unknown\" for non-Ethernet devices or if not set."]
+    pub fn ob_device_list_get_device_user_name(
         list: *const ob_device_list,
         index: u32,
         error: *mut *mut ob_error,
@@ -5231,6 +5571,30 @@ unsafe extern "C" {
         config: *mut ob_config,
         error: *mut *mut ob_error,
     ) -> ob_calibration_param;
+}
+unsafe extern "C" {
+    #[doc = "@brief Get the current pipeline status observed during streaming.\n\n @note This function returns the accumulated status since the last call or since the pipeline was (re)started.\n       The status is reset after each call. It is recommended to call this when no frames have been received\n       for a period of time. If the status indicates a data error or no-frame condition, the SDK will also\n       attempt to fetch device and driver status (with throttling to avoid excessive device communication).\n\n @param[in] pipeline The pipeline object\n @param[out] error Pointer to an error object that will be set if an error occurs.\n\n @return ob_pipeline_status Pipeline status reflecting events observed since the previous call."]
+    pub fn ob_pipeline_get_status(
+        pipeline: *mut ob_pipeline,
+        error: *mut *mut ob_error,
+    ) -> ob_pipeline_status;
+}
+unsafe extern "C" {
+    #[doc = "@brief Enable pipeline health monitor with periodic status polling.\n\n @note When enabled, an internal polling thread will periodically check the pipeline status (including SDK frame\n       drops, device error state, and driver status). If any abnormal status is detected, the callback will be\n       invoked. The callback is invoked from an internal thread; avoid blocking operations in the callback.\n\n @param[in] pipeline The pipeline object\n @param[in] callback The callback function to be invoked when abnormal status is detected\n @param[in] user_data User-defined data passed to the callback\n @param[in] interval_ms Polling interval in milliseconds (recommended: 3000-5000)\n @param[out] error Pointer to an error object that will be set if an error occurs."]
+    pub fn ob_pipeline_enable_health_monitor(
+        pipeline: *mut ob_pipeline,
+        callback: ob_pipeline_status_callback,
+        user_data: *mut ::std::os::raw::c_void,
+        interval_ms: u32,
+        error: *mut *mut ob_error,
+    );
+}
+unsafe extern "C" {
+    #[doc = "@brief Disable pipeline health monitor.\n\n @param[in] pipeline The pipeline object\n @param[out] error Pointer to an error object that will be set if an error occurs."]
+    pub fn ob_pipeline_disable_health_monitor(
+        pipeline: *mut ob_pipeline,
+        error: *mut *mut ob_error,
+    );
 }
 unsafe extern "C" {
     #[doc = "@brief Get the type of the sensor.\n\n @param[in] sensor The sensor object.\n @param[out] error Logs error messages.\n\n @return The sensor type."]

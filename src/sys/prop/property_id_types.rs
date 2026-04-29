@@ -43,11 +43,13 @@ define_int_property!(
 );
 define_bool_property!(CheckPpsSyncInSignal, "@brief check pps sync in signal");
 define_int_property!(ColorAeMaxExposure, "@brief Color AE max exposure");
+define_int_property!(ColorAeMaxGain, "@brief Color AE max gain");
 define_struct_property!(
     ColorAeRoi,
     OBRegionOfInterest,
     "@brief Color Sensor AE ROI configuration\n @brief The Value type is @ref OBRegionOfInterest"
 );
+define_bool_property!(ColorAntiFlicker, "@brief Color anti-flicker switch");
 define_bool_property!(ColorAutoExposure, "@brief Color camera auto exposure");
 define_int_property!(
     ColorAutoExposurePriority,
@@ -80,7 +82,6 @@ define_int_property!(
     ColorLeftRotate,
     "@brief Left Color sensor rotation, angle{0, 90, 180, 270}"
 );
-define_int_property!(ColorMaximalGain, "@brief Color camera maximal gain");
 define_int_property!(ColorMaximalShutter, "@brief Color camera shutter gain");
 define_bool_property!(ColorMirror, "@brief Color mirror");
 define_int_property!(
@@ -228,6 +229,20 @@ define_bool_property!(
 );
 ///This property is a struct, but we don't have a struct value type
 struct DeviceIpAddrConfig;
+///This property is a struct, but we don't have a struct value type
+struct DeviceIpAddrConfigV2;
+define_int_property!(
+    DeviceIpMode,
+    "@brief Device IP mode\n @param value\n   - 0: AMR Sensor Mode.\n        Typically configured for ehternet interface sensors for AMRs.\n        When DHCP is enabled and the device fails to obtain a valid IP address, it falls back to Persistent IP.\n        If neither of Persistent IP and DHCP is specified, Persistent IP is enabled by default.\n\n   - 1: Industrial Sensor Mode.\n        Typically configured for ehternet interface sensors for industrial applications.\n        When DHCP is enabled and the device fails to obtain a valid IP address, it falls back to LLA (Link-Local Address).\n        If Persistent IP and DHCP are both enabled, the sensor starts with the attemp to used the specified persistent IP\n        and falls back to DHCP if Persistent IP fails."
+);
+define_bool_property!(
+    DeviceNetworkLla,
+    "@brief LLA (Link Local Address) switch\n\n @deprecated The property is deprecated"
+);
+define_bool_property!(
+    DeviceOfflineAfterIpConfigApply,
+    "@brief Indicates whether the device will go offline after applying IP configuration.\n This property does not represent an actual command; it is a capability flag only,\n used to identify whether the current device has the behavior of going offline after IP config is applied."
+);
 define_int_property!(
     DevicePerformanceMode,
     "@brief Switch device performance mode, currently available in Adaptive Mode and High Performance Mode, such as G335LE."
@@ -260,6 +275,10 @@ define_bool_property!(
 define_int_property!(
     DeviceWorkMode,
     "@brief Device operating mode (power consumption)"
+);
+define_int_property!(
+    DhcpAssignIpTimeout,
+    "@brief DHCP assign IP timeout, unit: second"
 );
 define_struct_property!(
     DispOffsetConfig,
@@ -515,7 +534,7 @@ define_bool_property!(
 );
 define_int_property!(
     SwitchIrMode,
-    "@brief Switch infrared imaging mode, 0: active IR mode, 1: passive IR mode"
+    "@brief Switch infrared imaging mode, 0: positive IR mode, 1: passive IR mode"
 );
 define_bool_property!(
     SyncSignalTriggerOut,

@@ -40,6 +40,14 @@ pub enum OrbbecError {
     UnsupportedOperation(OrbbecErrorData),
     /// Device access denied
     AccessDenied(OrbbecErrorData),
+    /// Camera or Device is not available
+    DeviceUnavailable(OrbbecErrorData),
+    /// Runtime data is invalid, check data content or size
+    InvalidData(OrbbecErrorData),
+    /// The requested item was not found
+    NotFound(OrbbecErrorData),
+    /// Resource is busy or locked by another operation
+    ResourceBusy(OrbbecErrorData),
 }
 
 impl fmt::Display for OrbbecError {
@@ -64,6 +72,12 @@ impl fmt::Display for OrbbecError {
                 write!(f, "Unsupported Operation: {}", data.message)
             }
             OrbbecError::AccessDenied(data) => write!(f, "Access Denied: {}", data.message),
+            OrbbecError::DeviceUnavailable(data) => {
+                write!(f, "Device Unavailable: {}", data.message)
+            }
+            OrbbecError::InvalidData(data) => write!(f, "Invalid Data: {}", data.message),
+            OrbbecError::NotFound(data) => write!(f, "Not Found: {}", data.message),
+            OrbbecError::ResourceBusy(data) => write!(f, "Resource Busy: {}", data.message),
         }
     }
 }
@@ -95,6 +109,10 @@ impl From<&OBError> for OrbbecError {
             OBExceptionType::Memory => OrbbecError::MemoryException(data),
             OBExceptionType::UnsupportedOperation => OrbbecError::UnsupportedOperation(data),
             OBExceptionType::AccessDenied => OrbbecError::AccessDenied(data),
+            OBExceptionType::DeviceUnavailable => OrbbecError::DeviceUnavailable(data),
+            OBExceptionType::InvalidData => OrbbecError::InvalidData(data),
+            OBExceptionType::NotFound => OrbbecError::NotFound(data),
+            OBExceptionType::ResourceBusy => OrbbecError::ResourceBusy(data),
         }
     }
 }

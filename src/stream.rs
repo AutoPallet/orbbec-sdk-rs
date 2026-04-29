@@ -146,7 +146,11 @@ impl StreamProfileList {
                     | OrbbecError::IOException(d)
                     | OrbbecError::MemoryException(d)
                     | OrbbecError::UnsupportedOperation(d)
-                    | OrbbecError::AccessDenied(d) => d,
+                    | OrbbecError::AccessDenied(d)
+                    | OrbbecError::DeviceUnavailable(d)
+                    | OrbbecError::InvalidData(d)
+                    | OrbbecError::NotFound(d)
+                    | OrbbecError::ResourceBusy(d) => d,
                 };
                 data.message = format!("{prefix}: {}", data.message);
                 Err(orbbec_err)

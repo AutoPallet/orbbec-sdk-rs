@@ -152,7 +152,7 @@ impl OBError {
 
         // Status is OK, no error to report
         let status = unsafe { (*error).status };
-        if status == orb::OBStatus::Ok {
+        if status == orb::OBErrorCode::StatusOk {
             unsafe { orb::ob_delete_error(error) };
             return Ok(());
         }

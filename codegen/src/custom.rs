@@ -32,3 +32,17 @@ pub(crate) fn struct_value_type(name: &str) -> Option<Ident> {
         _ => None,
     }
 }
+
+/// Struct properties whose `Get`/`Set` impls are written by hand and must not
+/// be emitted by codegen. The codegen still emits the `Property` impl via
+/// `define_property_base!`; the manual impls live in
+/// `src/sys/prop/custom_impls.rs`.
+///
+/// `MultiDeviceSyncConfig` is overridden because the generic structured-data
+/// path returns a 16-byte legacy `OBDeviceSyncConfig` on devices that speak
+/// the old sync protocol. The dedicated `ob_device_get_multi_device_sync_config`
+/// / `ob_device_set_multi_device_sync_config` functions perform the protocol
+/// negotiation and always exchange the new 25-byte struct.
+pub(crate) fn has_custom_property_impl(name: &str) -> bool {
+    matches!(name, "MultiDeviceSyncConfig")
+}

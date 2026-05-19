@@ -203,6 +203,34 @@ impl OBDevice {
         Ok(unsafe { value.assume_init() })
     }
 
+    /// Get the multi-device sync configuration via the dedicated SDK API.
+    ///
+    /// The generic structured-data path (`ob_device_get_structured_data` with
+    /// `OB_STRUCT_MULTI_DEVICE_SYNC_CONFIG`) is unsafe to use here: on devices
+    /// that speak the old sync protocol the SDK writes back a 16-byte
+    /// `OBDeviceSyncConfig` instead of the new 25-byte
+    /// `ob_multi_device_sync_config`. The dedicated function performs the
+    /// protocol negotiation and always returns the new struct.
+    pub fn get_multi_device_sync_config(
+        &self,
+    ) -> Result<orb::ob_multi_device_sync_config, OBError> {
+        call_ob_function!(orb::ob_device_get_multi_device_sync_config, self.inner)
+    }
+
+    /// Set the multi-device sync configuration via the dedicated SDK API.
+    /// See [`Self::get_multi_device_sync_config`] for why this bypasses the
+    /// generic structured-data path.
+    pub fn set_multi_device_sync_config(
+        &self,
+        config: &orb::ob_multi_device_sync_config,
+    ) -> Result<(), OBError> {
+        call_ob_function!(
+            orb::ob_device_set_multi_device_sync_config,
+            self.inner,
+            config as *const _,
+        )
+    }
+
     /// Load the device preset
     /// After loading the preset, the settings in the preset will set to the device immediately. Therefore, it is recommended to re-read the device settings to update the user program temporarily.
     pub fn load_preset(&self, preset_name: &CStr) -> Result<(), OBError> {

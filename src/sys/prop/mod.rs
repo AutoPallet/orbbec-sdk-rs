@@ -156,6 +156,7 @@ macro_rules! define_struct_property {
     };
 }
 
+mod custom_impls;
 mod property_id_types;
 mod structs;
 

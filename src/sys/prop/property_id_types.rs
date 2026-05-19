@@ -462,7 +462,7 @@ define_bool_property!(
 );
 define_int_property!(MaxDepth, "@brief Maximum depth threshold");
 define_int_property!(MinDepth, "@brief Minimum depth threshold");
-define_struct_property!(
+define_property_base!(
     MultiDeviceSyncConfig,
     OBMultiDeviceSyncConfig,
     "@brief Multi-device synchronization mode and parameter configuration"

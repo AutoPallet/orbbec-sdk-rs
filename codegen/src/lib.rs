@@ -5,7 +5,7 @@ use convert_case::Casing;
 use proc_macro2::{Ident, Span};
 use regex::Regex;
 
-use crate::custom::{VARIANT_RENAMES, struct_value_type};
+use crate::custom::{VARIANT_RENAMES, has_custom_property_impl, struct_value_type};
 use crate::helpers::{compute_trimmed_names, doc_strings, pretty_print_file, rustfmt_in_place};
 
 mod custom;
@@ -160,8 +160,16 @@ fn generate_property_id_types_file(
             PropertyIDType::Struct => {
                 let ty = struct_value_type(name.as_str());
                 if let Some(ty) = ty {
-                    quote::quote! {
-                        define_struct_property!(#name_token, #ty, #doc_comment);
+                    if has_custom_property_impl(name.as_str()) {
+                        // Emit only the marker + `Property` impl; the `Get`/`Set`
+                        // impls live in `src/sys/prop/custom_impls.rs`.
+                        quote::quote! {
+                            define_property_base!(#name_token, #ty, #doc_comment);
+                        }
+                    } else {
+                        quote::quote! {
+                            define_struct_property!(#name_token, #ty, #doc_comment);
+                        }
                     }
                 } else {
                     // If we don't have a struct value type, we can't generate the property

@@ -56,6 +56,30 @@ pub use crate::sys::orb::OBFrameAggregateOutputMode as FrameAggregateOutputMode;
 #[doc(inline)]
 pub use crate::sys::orb::OBDeviceLogSeverityLevel as LogSeverity;
 
+#[doc(inline)]
+pub use crate::sys::orb::OBMultiDeviceSyncConfig as MultiDeviceSyncConfig;
+
+#[doc(inline)]
+pub use crate::sys::orb::OBMultiDeviceSyncMode as MultiDeviceSyncMode;
+
+#[doc(inline)]
+pub use crate::sys::orb::OBPresetResolutionConfig as PresetResolutionConfig;
+
+#[doc(inline)]
+pub use crate::sys::orb::OBBaselineCalibrationParam as BaselineCalibrationParam;
+
+#[doc(inline)]
+pub use crate::sys::orb::OBRegionOfInterest as RegionOfInterest;
+
+#[doc(inline)]
+pub use crate::sys::orb::OBDeviceSerialNumber as DeviceSerialNumber;
+
+#[doc(inline)]
+pub use crate::sys::orb::OBDeviceTemperature as DeviceTemperature;
+
+#[doc(inline)]
+pub use crate::sys::orb::OBDispOffsetConfig as DispOffsetConfig;
+
 /// There can only be a single context at a time
 /// C API does not enforce this, but having multiple contexts
 /// will lead to crashes and undefined behavior

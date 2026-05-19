@@ -1,9 +1,26 @@
 //! Device module
+use std::ffi::c_void;
 use std::fmt;
 
 use crate::error::{OrbbecError, OrbbecErrorData};
 use crate::sys::prop::{GetProperty, Property, SetProperty};
 use crate::{Context, DeviceType, PermissionType, sys};
+
+/// Coefficients of the global timestamp linear fit: `host_us = a * device_us + b`.
+///
+/// Returned by [`Device::global_timestamp_linear_param`]. All fields are zero
+/// until the fitter has collected enough samples (typically a few seconds).
+#[derive(Clone, Copy, Debug)]
+pub struct LinearFuncParam {
+    /// Slope of the fit.
+    pub coefficient_a: f64,
+    /// Intercept of the fit.
+    pub constant_b: f64,
+    /// Most recent device-time sample fed into the fit (`x`).
+    pub check_data_x: u64,
+    /// Host-time partner of `check_data_x` (`y`).
+    pub check_data_y: u64,
+}
 
 /// Device information
 pub struct DeviceInfo {
@@ -143,12 +160,21 @@ impl fmt::Debug for DeviceInfo {
 
 /// A single Orbbec device
 pub struct Device {
+    // Drop order matters: `inner` must drop first so the SDK joins the
+    // global-timestamp fitter thread before we free `host_clock_fn`. Rust drops
+    // fields in declaration order.
     pub(crate) inner: sys::device::OBDevice,
+    /// Owns the heap storage that the SDK's global-timestamp fitter calls
+    /// through. `None` means the SDK is using its built-in clock source.
+    host_clock_fn: Option<Box<dyn FnMut() -> u64 + Send>>,
 }
 
 impl Device {
     pub(crate) fn new(inner: sys::device::OBDevice) -> Self {
-        Device { inner }
+        Device {
+            inner,
+            host_clock_fn: None,
+        }
     }
 
     pub(crate) fn inner(&self) -> &sys::device::OBDevice {
@@ -234,7 +260,89 @@ impl Device {
             .enable_global_timestamp(enabled)
             .map_err(OrbbecError::from)
     }
+
+    /// Install a host clock source for the global-timestamp fitter.
+    ///
+    /// The SDK normally pairs each device-time query with its built-in
+    /// `std::chrono::system_clock`-based host clock. Callers that want
+    /// `frame.global_timestamp_us()` in a different domain (typically a
+    /// monotonic application clock) supply that domain here.
+    ///
+    /// The closure is invoked from the SDK's fitter thread, twice per sample
+    /// interval (default 1 s), bracketing a device-time property query. It
+    /// must not block on, and must not call back into, the SDK.
+    ///
+    /// Safe to call before or after `enable_global_timestamp(true)`. If the
+    /// fitter is currently running, the call blocks briefly (~one sample's
+    /// RTT) so the SDK can swap atomically; any samples collected with the
+    /// previous clock domain are discarded.
+    pub fn set_global_timestamp_host_clock_fn<F>(&mut self, f: F) -> Result<(), OrbbecError>
+    where
+        F: FnMut() -> u64 + Send + 'static,
+    {
+        // Heap-allocate F so its address is stable. We pass `&mut *boxed` (a
+        // thin `*mut F`) as the C-side `user_data`; the trampoline casts it
+        // back to invoke F.
+        let mut boxed: Box<F> = Box::new(f);
+        let user_data = &mut *boxed as *mut F as *mut c_void;
+
+        extern "C" fn trampoline<F: FnMut() -> u64>(user_data: *mut c_void) -> u64 {
+            // SAFETY: `user_data` is the pointer we registered alongside
+            // `trampoline::<F>`. Its lifetime is tied to the `Box<F>` stored
+            // on the `Device`, which outlives the SDK's fitter thread (Drop
+            // order: `inner` joins the thread first, then `host_clock_fn`
+            // frees this box).
+            let f = unsafe { &mut *(user_data as *mut F) };
+            f()
+        }
+
+        // SAFETY: `user_data` points into `boxed`, which we move into
+        // `self.host_clock_fn` immediately below. The C side holds the
+        // pointer until either this method is called again or the device is
+        // destroyed; in both cases we ensure no fitter call is mid-flight
+        // before freeing the previous box.
+        unsafe {
+            self.inner
+                .set_global_timestamp_host_clock_fn(Some(trampoline::<F>), user_data)
+                .map_err(OrbbecError::from)?;
+        }
+
+        // The C side has returned, meaning no in-flight sample is still using
+        // the previous fn pointer. Now it's safe to drop the old box (if any)
+        // by replacing it with the new one.
+        self.host_clock_fn = Some(boxed);
+
+        Ok(())
+    }
+
+    /// Set the maximum acceptable round-trip time of a fitter sample.
+    /// Samples whose host-side bracket exceeds this are discarded.
+    ///
+    /// The SDK default is 20 ms (suitable for USB or wired-gigabit). For
+    /// Wi-Fi or congested links, bump this to ~50 ms.
+    pub fn set_global_timestamp_max_rtt_us(&self, max_rtt_us: u64) -> Result<(), OrbbecError> {
+        self.inner
+            .set_global_timestamp_max_rtt_us(max_rtt_us)
+            .map_err(OrbbecError::from)
+    }
+
+    /// Read the current linear fit from the global-timestamp fitter.
+    /// Returns a value whose `coefficient_a` is `0.0` if the fitter has not
+    /// collected enough samples yet.
+    pub fn global_timestamp_linear_param(&self) -> Result<LinearFuncParam, OrbbecError> {
+        let raw = self
+            .inner
+            .get_global_timestamp_linear_param()
+            .map_err(OrbbecError::from)?;
+        Ok(LinearFuncParam {
+            coefficient_a: raw.coefficient_a,
+            constant_b: raw.constant_b,
+            check_data_x: raw.check_data_x,
+            check_data_y: raw.check_data_y,
+        })
+    }
 }
+
 
 /// A list of Orbbec devices available
 pub struct DeviceList<'a> {

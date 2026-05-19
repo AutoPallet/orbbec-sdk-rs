@@ -221,6 +221,51 @@ impl OBDevice {
         orb::ob_device_enable_global_timestamp,
         enabled: bool,
     );
+
+    /// Install a host clock callback for the global timestamp fitter.
+    ///
+    /// The fitter pairs each device-time query with the value returned by
+    /// `fn_` and fits a linear `device_us -> host_us` model. Passing `None`
+    /// restores the SDK's default `std::chrono::system_clock`-based source.
+    ///
+    /// # Safety
+    ///
+    /// `user_data` must remain valid (pointing at live storage) for as long as
+    /// the SDK might invoke `fn_` — i.e. until the device is destroyed or this
+    /// function is called again with a different `user_data` / `None`.
+    pub unsafe fn set_global_timestamp_host_clock_fn(
+        &self,
+        fn_: orb::ob_host_clock_fn,
+        user_data: *mut std::ffi::c_void,
+    ) -> Result<(), OBError> {
+        call_ob_function!(
+            orb::ob_device_set_global_timestamp_host_clock_fn,
+            self.inner,
+            fn_,
+            user_data,
+        )
+    }
+
+    impl_ob_method!(
+        /// Set the maximum acceptable round-trip time of a fitter sample, in microseconds.
+        set_global_timestamp_max_rtt_us => (),
+        orb::ob_device_set_global_timestamp_max_rtt_us,
+        max_rtt_us: u64,
+    );
+
+    /// Read the current linear fit `host_us = a * device_us + b` from the fitter.
+    /// All fields are zero until the fitter has collected enough samples to fit.
+    pub fn get_global_timestamp_linear_param(
+        &self,
+    ) -> Result<orb::ob_linear_func_param, OBError> {
+        let mut out = MaybeUninit::<orb::ob_linear_func_param>::uninit();
+        call_ob_function!(
+            orb::ob_device_get_global_timestamp_linear_param,
+            self.inner,
+            out.as_mut_ptr(),
+        )?;
+        Ok(unsafe { out.assume_init() })
+    }
 }
 
 /// List of devices

@@ -372,6 +372,27 @@ impl<'a> DeviceList<'a> {
         self.len() == 0
     }
 
+    /// Get the serial number stored in the device-list metadata at `index`.
+    ///
+    /// Unlike [`Self::get`], this does not create or initialize a [`Device`].
+    ///
+    /// Returns an error if `index` is outside the device list.
+    pub fn serial_number(&self, index: usize) -> Result<String, OrbbecError> {
+        let index = u32::try_from(index).map_err(|_| {
+            OrbbecError::InvalidValue(OrbbecErrorData {
+                message: "Device index exceeds the SDK index range".to_string(),
+                function: "DeviceList::serial_number".to_string(),
+                args: index.to_string(),
+            })
+        })?;
+        let serial_number = self
+            .inner
+            .get_serial_number(index)
+            .map_err(OrbbecError::from)?;
+
+        Ok(serial_number.to_string_lossy().into_owned())
+    }
+
     /// Get the device at the specified index
     /// ### Arguments
     /// * `index` - The index of the device to get

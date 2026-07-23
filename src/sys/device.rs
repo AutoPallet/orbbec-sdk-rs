@@ -314,6 +314,16 @@ impl OBDeviceList {
         orb::ob_device_list_get_count,
     );
 
+    /// Get the serial number stored in the device-list metadata at `index`.
+    pub fn get_serial_number(&self, index: u32) -> Result<&CStr, OBError> {
+        let ptr = call_ob_function!(
+            orb::ob_device_list_get_device_serial_number,
+            self.inner,
+            index,
+        )?;
+        Ok(unsafe { CStr::from_ptr(ptr) })
+    }
+
     /// Get the device object at the specified index
     pub fn get_device(&self, index: u32) -> Result<OBDevice, OBError> {
         let device = call_ob_function!(orb::ob_device_list_get_device, self.inner, index)?;

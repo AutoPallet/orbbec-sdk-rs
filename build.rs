@@ -25,10 +25,7 @@ fn main() {
     };
 
     if needs_refresh {
-        if work_src.exists() {
-            fs::remove_dir_all(&work_src).unwrap();
-        }
-        copy_dir_all(&src, &work_src).unwrap();
+        sync_dir_all(&src, &work_src).unwrap();
         fs::write(&stamp, &current_stamp).unwrap();
     }
 
@@ -124,8 +121,12 @@ fn main() {
         // the public headers. Copy it into work_src so bindgen can find it.
         let generated_export = dst.join("include/libobsensor/h/Export.h");
         let target_export = work_src.join("include/libobsensor/h/Export.h");
-        fs::copy(&generated_export, &target_export)
-            .expect("Failed to copy generated Export.h into work_src");
+        if file_differs(&generated_export, &target_export)
+            .expect("Failed to compare generated Export.h against work_src copy")
+        {
+            fs::copy(&generated_export, &target_export)
+                .expect("Failed to copy generated Export.h into work_src");
+        }
 
         let cargo_manifest_dir = std::env::current_dir().unwrap();
         let target = std::env::var("TARGET").unwrap();
@@ -137,20 +138,52 @@ fn main() {
     }
 }
 
-fn copy_dir_all(src: &Path, dst: &Path) -> std::io::Result<()> {
+/// Mirrors `src` into `dst`, rewriting only files whose contents differ and
+/// deleting entries that no longer exist in `src`. Unchanged files keep
+/// their mtimes so the CMake build below stays incremental across syncs.
+fn sync_dir_all(src: &Path, dst: &Path) -> std::io::Result<()> {
     fs::create_dir_all(dst)?;
+
+    // Remove entries with no counterpart in the source tree.
+    for entry in fs::read_dir(dst)? {
+        let entry = entry?;
+        if !src.join(entry.file_name()).exists() {
+            if entry.file_type()?.is_dir() {
+                fs::remove_dir_all(entry.path())?;
+            } else {
+                fs::remove_file(entry.path())?;
+            }
+        }
+    }
+
     for entry in fs::read_dir(src)? {
         let entry = entry?;
         let ty = entry.file_type()?;
         let from = entry.path();
         let to = dst.join(entry.file_name());
         if ty.is_dir() {
-            copy_dir_all(&from, &to)?;
-        } else {
+            if to.is_file() {
+                fs::remove_file(&to)?;
+            }
+            sync_dir_all(&from, &to)?;
+        } else if file_differs(&from, &to)? {
+            if to.is_dir() {
+                fs::remove_dir_all(&to)?;
+            }
             fs::copy(&from, &to)?;
         }
     }
     Ok(())
+}
+
+fn file_differs(a: &Path, b: &Path) -> std::io::Result<bool> {
+    let Ok(meta_b) = fs::metadata(b) else {
+        return Ok(true);
+    };
+    if !meta_b.is_file() || fs::metadata(a)?.len() != meta_b.len() {
+        return Ok(true);
+    }
+    Ok(fs::read(a)? != fs::read(b)?)
 }
 
 fn dir_fingerprint(root: &Path) -> std::io::Result<String> {

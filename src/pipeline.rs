@@ -71,6 +71,10 @@ impl Config {
     }
 }
 
+// SAFETY: the underlying ob_config is plain configuration data only read by
+// the SDK at pipeline start.
+unsafe impl Send for Config {}
+
 type PipelineCallback = Box<Box<dyn FnMut(FrameSet) + Send>>;
 
 /// Pipeline
@@ -218,3 +222,12 @@ impl Pipeline {
             .map_err(crate::error::OrbbecError::from)
     }
 }
+
+// SAFETY: the underlying ob_pipeline serializes its own state behind a
+// per-pipeline stream mutex, so calls into it are safe from any thread; the
+// stored callback is already `Send`. Note this only covers the C object's
+// own locking: `&mut self` gives per-wrapper exclusivity, not per-C-object
+// exclusivity, so callers must not drive one underlying pipeline
+// concurrently through aliased `Pipeline` wrappers, should any come to
+// exist.
+unsafe impl Send for Pipeline {}

@@ -90,6 +90,9 @@ impl VideoStreamProfile {
     }
 }
 
+// SAFETY: the underlying ob_stream_profile is immutable once created.
+unsafe impl Send for VideoStreamProfile {}
+
 impl AsRef<OBStreamProfile> for VideoStreamProfile {
     fn as_ref(&self) -> &OBStreamProfile {
         &self.inner
@@ -215,6 +218,9 @@ impl StreamProfileList {
         StreamProfileListIterator::new(self)
     }
 }
+
+// SAFETY: the underlying ob_stream_profile_list is immutable once created.
+unsafe impl Send for StreamProfileList {}
 
 /// An iterator over video stream profiles in a stream profile list
 pub struct StreamProfileListIterator<'a> {

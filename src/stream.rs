@@ -90,7 +90,7 @@ impl VideoStreamProfile {
     }
 }
 
-// SAFETY: the underlying ob_stream_profile is immutable once created.
+// SAFETY: `ob_stream_profile` is immutable after creation.
 unsafe impl Send for VideoStreamProfile {}
 
 impl AsRef<OBStreamProfile> for VideoStreamProfile {
@@ -219,7 +219,7 @@ impl StreamProfileList {
     }
 }
 
-// SAFETY: the underlying ob_stream_profile_list is immutable once created.
+// SAFETY: `ob_stream_profile_list` is immutable after creation.
 unsafe impl Send for StreamProfileList {}
 
 /// An iterator over video stream profiles in a stream profile list

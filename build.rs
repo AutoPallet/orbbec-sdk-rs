@@ -138,13 +138,10 @@ fn main() {
     }
 }
 
-/// Mirrors `src` into `dst`, rewriting only files whose contents differ and
-/// deleting entries that no longer exist in `src`. Unchanged files keep
-/// their mtimes so the CMake build below stays incremental across syncs.
+/// Makes `dst` match `src` without changing the mtimes of files whose contents match.
 fn sync_dir_all(src: &Path, dst: &Path) -> std::io::Result<()> {
     fs::create_dir_all(dst)?;
 
-    // Remove entries with no counterpart in the source tree.
     for entry in fs::read_dir(dst)? {
         let entry = entry?;
         if !src.join(entry.file_name()).exists() {

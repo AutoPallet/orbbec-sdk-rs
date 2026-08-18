@@ -160,21 +160,15 @@ impl fmt::Debug for DeviceInfo {
 
 /// A single Orbbec device
 pub struct Device {
-    // Drop order matters: `inner` must drop first so the SDK joins the
-    // global-timestamp fitter thread before we free `host_clock_fn`. Rust drops
-    // fields in declaration order. This only joins the thread if dropping
-    // `inner` releases the *last* shared_ptr ref to the underlying ob_device;
-    // see the invariant on `host_clock_fn` below.
+    // Rust drops fields in declaration order. If this is the last shared `ob_device`, dropping
+    // `inner` joins the fitter thread before its callback storage is freed.
     pub(crate) inner: sys::device::OBDevice,
-    /// Owns the heap storage that the SDK's global-timestamp fitter calls
-    /// through. `None` means the SDK is using its built-in clock source.
+    /// Stores the callback while the global-timestamp fitter can call it. `None` uses the SDK's
+    /// clock.
     ///
-    /// Invariant: a `Device` with `host_clock_fn.is_some()` must outlive
-    /// every `Pipeline` created from it. A `Pipeline` holds its own
-    /// shared_ptr ref to the same underlying ob_device, so if the `Pipeline`
-    /// outlives this `Device`, dropping this wrapper does not stop the
-    /// fitter thread; the C side keeps calling back into the freed
-    /// `host_clock_fn` box, a use-after-free.
+    /// Every [`Pipeline`] created from this device must be dropped first. A pipeline holds another
+    /// reference to the same `ob_device`, so dropping this wrapper may not stop the fitter thread.
+    /// Freeing the callback first would leave that thread with a dangling pointer.
     host_clock_fn: Option<Box<dyn FnMut() -> u64 + Send>>,
 }
 
@@ -352,15 +346,10 @@ impl Device {
     }
 }
 
-// SAFETY: the underlying ob_device is a shared_ptr-backed SDK object whose
-// property server (a recursive mutex) and other components take their own
-// per-device locks, so calls into it are safe from any thread; `host_clock_fn`
-// is already `Send`. Note this only covers the C object's own locking: two
-// `Device` wrappers can alias the same underlying ob_device (e.g.
-// `Pipeline::get_device()` mints a second wrapper from the shared_ptr held by
-// a `Pipeline`), and callers must not drive one underlying device
-// concurrently through aliased wrappers, since per-wrapper `&mut self`
-// exclusivity does not imply per-C-object exclusivity.
+// SAFETY: `ob_device` uses per-device locks, including a recursive property mutex, and
+// `host_clock_fn` is `Send`. `Pipeline::get_device()` can create another wrapper for the same
+// `ob_device`; callers must not use such aliases concurrently because `&mut self` only excludes
+// access through one wrapper.
 unsafe impl Send for Device {}
 
 /// A list of Orbbec devices available
@@ -369,13 +358,6 @@ pub struct DeviceList<'a> {
     /// We hold a reference to the context to ensure it lives as long as the device list
     _context: &'a Context,
 }
-
-/// Serializes [`DeviceList::get`] across threads. Device creation in the SDK
-/// shares unlocked device-manager state, and its slow step (the vendor TCP
-/// connect) is globally serialized inside the SDK anyway, so callers lose no
-/// parallelism. If a thread holding this lock panics inside `get`, the mutex
-/// is poisoned and every later `lock().unwrap()` in `get` panics too.
-static DEVICE_OPEN_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
 impl<'a> DeviceList<'a> {
     pub(crate) fn new(inner: sys::device::OBDeviceList, context: &'a Context) -> Self {
@@ -423,7 +405,6 @@ impl<'a> DeviceList<'a> {
     /// ### Arguments
     /// * `index` - The index of the device to get
     pub fn get(&self, index: usize) -> Result<Device, OrbbecError> {
-        let _guard = DEVICE_OPEN_LOCK.lock().unwrap();
         let device = self.inner.get_device(index as u32);
 
         device.map(Device::new).map_err(OrbbecError::from)
@@ -435,9 +416,8 @@ impl<'a> DeviceList<'a> {
     }
 }
 
-// SAFETY: the underlying ob_device_list is immutable snapshot metadata plus
-// `get_device`, which is serialized by DEVICE_OPEN_LOCK. The `_context`
-// reference is only held to keep the SDK context alive.
+// SAFETY: `ob_device_list` is an immutable snapshot. `DeviceManager` serializes construction per
+// UID and allows different UIDs to initialize together. `_context` keeps the SDK context alive.
 unsafe impl Send for DeviceList<'_> {}
 unsafe impl Sync for DeviceList<'_> {}
 

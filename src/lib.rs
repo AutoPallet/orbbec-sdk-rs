@@ -90,11 +90,9 @@ pub struct Context {
     inner: OBContext,
 }
 
-// SAFETY: the underlying ob_context is a shared_ptr-backed SDK object; the
-// device-manager and enumerator singletons behind it take their own locks.
-// Concurrent enumeration (Sync) is sound only as of the vendored SDK's race
-// fixes pinned by this crate's `OrbbecSDK` gitlink, in particular holding
-// `gvcpMutex_` for the duration of `ensureDiscoveryIfNeeded`.
+// SAFETY: `ob_context`, the device manager, and the enumerators use internal locks. Concurrent
+// enumeration depends on the vendored SDK holding `gvcpMutex_` throughout
+// `ensureDiscoveryIfNeeded`.
 unsafe impl Send for Context {}
 unsafe impl Sync for Context {}
 

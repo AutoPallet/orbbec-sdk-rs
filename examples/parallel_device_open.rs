@@ -3,22 +3,34 @@ use std::time::{Duration, Instant};
 
 use anyhow::{Context as _, anyhow, ensure};
 use clap::Parser;
-use orbbec_sdk::{Context, LogSeverity, device::Device, logger::Logger};
+use orbbec_sdk::{
+    Context, LogSeverity,
+    device::{Device, DeviceList},
+    logger::Logger,
+};
 
 #[derive(Parser)]
 #[command(about = "Open Orbbec devices concurrently without starting streams")]
 struct Args {
     /// Open all enumerated devices.
-    #[arg(long, conflicts_with = "index")]
+    #[arg(long, conflicts_with_all = ["index", "serial"])]
     all: bool,
 
     /// Open the device at this index.
-    #[arg(long, conflicts_with = "all")]
+    #[arg(long, conflicts_with_all = ["all", "serial"])]
     index: Option<usize>,
+
+    /// Open the enumerated devices with these serial numbers. Repeat for multiple devices.
+    #[arg(long, conflicts_with_all = ["all", "index"])]
+    serial: Vec<String>,
 
     /// Number of concurrent opens for the selected index.
     #[arg(long, default_value_t = 1, requires = "index")]
     copies: usize,
+
+    /// Repeat the concurrent open, closing every device between rounds.
+    #[arg(long, default_value_t = 1)]
+    iterations: usize,
 }
 
 struct OpenedDevice {
@@ -30,10 +42,14 @@ struct OpenedDevice {
 fn main() -> anyhow::Result<()> {
     let args = Args::parse();
     ensure!(
-        args.all || args.index.is_some(),
-        "select either --all or --index"
+        args.all || args.index.is_some() || !args.serial.is_empty(),
+        "select one of --all, --index or --serial"
     );
     ensure!(args.copies > 0, "--copies must be greater than zero");
+    ensure!(
+        args.iterations > 0,
+        "--iterations must be greater than zero"
+    );
 
     Logger::set_directory(LogSeverity::Off, None)?;
     Logger::set_console(LogSeverity::Info)?;
@@ -43,6 +59,19 @@ fn main() -> anyhow::Result<()> {
     let indices = if args.all {
         ensure!(!devices.is_empty(), "no devices found");
         (0..devices.len()).collect::<Vec<_>>()
+    } else if !args.serial.is_empty() {
+        let mut indices = Vec::with_capacity(args.serial.len());
+        for serial in &args.serial {
+            let index = (0..devices.len())
+                .find(|&index| {
+                    devices
+                        .serial_number(index)
+                        .is_ok_and(|found| found == *serial)
+                })
+                .with_context(|| format!("no enumerated device has serial {serial}"))?;
+            indices.push(index);
+        }
+        indices
     } else {
         let index = args.index.expect("validated above");
         ensure!(
@@ -53,15 +82,26 @@ fn main() -> anyhow::Result<()> {
         vec![index; args.copies]
     };
 
+    for iteration in 0..args.iterations {
+        if args.iterations > 1 {
+            println!("iteration {iteration}");
+        }
+        open_concurrently(&devices, &indices)?;
+    }
+
+    Ok(())
+}
+
+fn open_concurrently(devices: &DeviceList<'_>, indices: &[usize]) -> anyhow::Result<()> {
     let start_barrier = Arc::new(Barrier::new(indices.len()));
     let wall_started = Instant::now();
     let opened = std::thread::scope(|scope| {
         let handles = indices
-            .into_iter()
+            .iter()
+            .copied()
             .enumerate()
             .map(|(worker, index)| {
                 let start_barrier = Arc::clone(&start_barrier);
-                let devices = &devices;
                 scope.spawn(move || -> anyhow::Result<OpenedDevice> {
                     start_barrier.wait();
                     let started = Instant::now();
